@@ -8,6 +8,9 @@ export default class AuthController {
   @Post('sign-in')
   Login(@Body() dto: SigninDto) {
     console.log(dto, 'dto from user in the auth controller');
+    if (!dto.email || !dto.password) {
+      throw new Error('Invalid credentials');
+    }
     return this.authService.signIn(dto);
   }
 }
