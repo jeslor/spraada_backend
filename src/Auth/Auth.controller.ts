@@ -8,6 +8,6 @@ export default class AuthController {
   @Post('sign-in')
   Login(@Body() dto: SigninDto) {
     console.log(dto, 'dto from user in the auth controller');
-    return this.authService.signIn;
+    return this.authService.signIn(dto);
   }
 }
