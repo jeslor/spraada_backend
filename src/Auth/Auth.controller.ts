@@ -13,4 +13,13 @@ export default class AuthController {
     }
     return this.authService.signIn(dto);
   }
+
+  @Post('sign-up')
+  Register(@Body() dto: SigninDto) {
+    console.log(dto, 'dto from user in the auth controller');
+    if (!dto.email || !dto.password) {
+      throw new Error('Invalid credentials');
+    }
+    return this.authService.signUp(dto);
+  }
 }

@@ -25,12 +25,24 @@ export default class AuthService {
     }
   }
 
-  async signUp() {
+  async signUp(dto: SigninDto) {
     //
+    try {
+      const hashedPassword = await Argon.hash(dto.password);
+      const newUser = await this.prisma.user.create({
+        data: {
+          email: dto.email,
+          hash: hashedPassword,
+        },
+      });
+      return this.generateToken(newUser.email, newUser.id);
+    } catch (error) {
+      throw error;
+    }
   }
   async generateToken(userEmail: string, userId: number) {
     const payload = { email: userEmail, sub: userId };
-    const token = this.jwt.signAsync(payload);
+    const token = await this.jwt.signAsync(payload);
     return {
       access_token: token,
     };
