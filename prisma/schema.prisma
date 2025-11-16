@@ -28,8 +28,11 @@ model Profile {
   firstName String
   lastName  String
   bio       String?
+  isOnboarded Boolean  @default(false)
   avatarUrl String?
   coverUrl  String?
+  country   String?
+  city      String?
   role      String   @default("USER")
   phone     String?
   userId    Int      @unique
@@ -55,7 +58,7 @@ model Listing {
   address String
   city String
   country String
-  photos String[]
+  photos Photo[]
  createdAt DateTime @default(now())
 }
 model Booking {
@@ -68,4 +71,12 @@ model Booking {
  end DateTime
  totalCents Int
  status String
+}
+
+model Photo {
+ id String @id @default(cuid())
+ photoKey String
+ url String
+ listingId String
+ listing Listing @relation(fields: [listingId], references: [id])
 }
