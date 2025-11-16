@@ -28,29 +28,44 @@ model Profile {
   firstName String
   lastName  String
   bio       String?
-  semester  Int?
-  year      Int?
+  avatarUrl String?
+  coverUrl  String?
+  role      String   @default("USER")
+  phone     String?
   userId    Int      @unique
+  listings  Listing[]
+  bookings  Booking[]
   user      User     @relation(fields: [userId], references: [id])
-  courses   Course[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
-model Course {
-  id          Int      @id @default(autoincrement())
-  title       String
-  description String?
-  profileId   Int
-  profile     Profile  @relation(fields: [profileId], references: [id])
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+model Listing {
+ id String @id @default(cuid())
+ ownerId String
+ title String
+ description String
+ dailyPriceCents Int
+ userId Int
+ profile Profile @relation(fields: [userId], references: [id])
+ depositCents Int
+ replacementValue Int
+ lat Float
+ lng Float
+  address String
+  city String
+  country String
+  photos String[]
+ createdAt DateTime @default(now())
 }
-model TimeTable {
-  id        Int      @id @default(autoincrement())
-  day       String
-  startTime String
-  endTime   String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model Booking {
+ id String @id @default(cuid())
+ userId Int
+ profile Profile @relation(fields: [userId], references: [id])
+ listingId String
+ renterId String
+ start DateTime
+ end DateTime
+ totalCents Int
+ status String
 }
