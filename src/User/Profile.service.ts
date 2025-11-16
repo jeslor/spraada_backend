@@ -1,15 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import PrismaService from 'src/prisma/prisma.service';
 import { CreateProfileDto, EditProfileDto } from './dto';
+import { User } from '@prisma/client';
 
 @Injectable()
 export class ProfileService {
   constructor(private prisma: PrismaService) {}
-  async createProfile(userId: number, dto: CreateProfileDto) {
+  async createProfile(user: User, dto: CreateProfileDto) {
     // Implement the logic to create a new user profile in the database using Prisma or any other ORM
     const newProfile = await this.prisma.profile.create({
       data: {
-        userId,
+        userId: user.id,
+        email: user.email,
         ...dto,
       },
     });

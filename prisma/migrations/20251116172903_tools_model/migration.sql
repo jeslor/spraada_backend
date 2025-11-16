@@ -3,6 +3,7 @@ CREATE TABLE "User" (
     "id" SERIAL NOT NULL,
     "email" TEXT NOT NULL,
     "hash" TEXT NOT NULL,
+    "isOnboarded" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -14,9 +15,12 @@ CREATE TABLE "Profile" (
     "id" SERIAL NOT NULL,
     "firstName" TEXT NOT NULL,
     "lastName" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
     "bio" TEXT,
     "avatarUrl" TEXT,
     "coverUrl" TEXT,
+    "country" TEXT,
+    "city" TEXT,
     "role" TEXT NOT NULL DEFAULT 'USER',
     "phone" TEXT,
     "userId" INTEGER NOT NULL,
@@ -41,7 +45,6 @@ CREATE TABLE "Listing" (
     "address" TEXT NOT NULL,
     "city" TEXT NOT NULL,
     "country" TEXT NOT NULL,
-    "photos" TEXT[],
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "Listing_pkey" PRIMARY KEY ("id")
@@ -61,8 +64,21 @@ CREATE TABLE "Booking" (
     CONSTRAINT "Booking_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "Photo" (
+    "id" TEXT NOT NULL,
+    "photoKey" TEXT NOT NULL,
+    "url" TEXT NOT NULL,
+    "listingId" TEXT NOT NULL,
+
+    CONSTRAINT "Photo_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Profile_email_key" ON "Profile"("email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Profile_userId_key" ON "Profile"("userId");
@@ -75,3 +91,6 @@ ALTER TABLE "Listing" ADD CONSTRAINT "Listing_userId_fkey" FOREIGN KEY ("userId"
 
 -- AddForeignKey
 ALTER TABLE "Booking" ADD CONSTRAINT "Booking_userId_fkey" FOREIGN KEY ("userId") REFERENCES "Profile"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Photo" ADD CONSTRAINT "Photo_listingId_fkey" FOREIGN KEY ("listingId") REFERENCES "Listing"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

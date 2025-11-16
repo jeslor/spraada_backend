@@ -15,10 +15,6 @@ export class CreateProfileDto {
   @IsNotEmpty()
   lastName: string;
 
-  @IsEmail()
-  @IsNotEmpty()
-  email: string;
-
   @IsOptional()
   @IsString()
   bio?: string;

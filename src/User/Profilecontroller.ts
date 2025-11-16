@@ -12,7 +12,7 @@ export class ProfileController {
 
   @Post()
   CreateProfile(@GetUser() user: User, @Body() dto: CreateProfileDto) {
-    return this.userService.createProfile(user.id, dto);
+    return this.userService.createProfile(user, { ...dto });
   }
 
   @Get('/:id')

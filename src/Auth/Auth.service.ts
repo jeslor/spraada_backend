@@ -35,6 +35,7 @@ export default class AuthService {
           hash: hashedPassword,
         },
       });
+
       return this.generateToken(newUser.email, newUser.id);
     } catch (error) {
       throw error;

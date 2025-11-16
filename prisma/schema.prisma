@@ -18,6 +18,7 @@ model User {
   id        Int      @id @default(autoincrement())
   email     String   @unique
   hash      String
+  isOnboarded Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   profile   Profile?
@@ -27,8 +28,8 @@ model Profile {
   id        Int      @id @default(autoincrement())
   firstName String
   lastName  String
+  email     String   @unique
   bio       String?
-  isOnboarded Boolean  @default(false)
   avatarUrl String?
   coverUrl  String?
   country   String?
