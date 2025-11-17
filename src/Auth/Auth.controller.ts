@@ -1,5 +1,5 @@
 import { Body, Controller, Post } from '@nestjs/common';
-import { SigninDto } from './dto';
+import { SigninDto, SignupDto } from './dto';
 import AuthService from './Auth.service';
 
 @Controller('auth')
@@ -15,11 +15,16 @@ export default class AuthController {
   }
 
   @Post('sign-up')
-  Register(@Body() dto: SigninDto) {
-    console.log(dto, 'dto from user in the auth controller');
+  Register(@Body() dto: SignupDto) {
+    console.log(dto, 'dto from user in the sign up controller');
     if (!dto.email || !dto.password) {
       throw new Error('Invalid credentials');
     }
-    return this.authService.signUp(dto);
+    if (dto.password !== dto.confirmPassword) {
+      throw new Error('Passwords do not match');
+    }
+    // Remove confirmPassword before passing to service
+    const { confirmPassword, ...signUpData } = dto;
+    return this.authService.signUp(signUpData);
   }
 }

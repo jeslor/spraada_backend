@@ -29,7 +29,7 @@ export default class AuthService {
     }
   }
 
-  async signUp(dto: SigninDto) {
+  async signUp(dto: { email: string; password: string }) {
     //
     try {
       const hashedPassword = await Argon.hash(dto.password);
