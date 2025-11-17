@@ -19,17 +19,13 @@ export default class AuthService {
 
       const pwMatches = await Argon.verify(foundUser.hash, dto.password);
       if (!pwMatches) throw new ForbiddenException('incorrect password');
-      return this.generateToken(
-        foundUser.email,
-        foundUser.id,
-        foundUser.isOnboarded,
-      );
+      return this.generateToken(foundUser.email, foundUser.id);
     } catch (error) {
       throw error;
     }
   }
 
-  async signUp(dto: { email: string; password: string }) {
+  async signUp(dto: SigninDto) {
     //
     try {
       const hashedPassword = await Argon.hash(dto.password);
@@ -39,23 +35,16 @@ export default class AuthService {
           hash: hashedPassword,
         },
       });
-
-      return this.generateToken(newUser.email, newUser.id, newUser.isOnboarded);
+      return this.generateToken(newUser.email, newUser.id);
     } catch (error) {
       throw error;
     }
   }
-  async generateToken(userEmail: string, userId: number, isOnboarded: boolean) {
+  async generateToken(userEmail: string, userId: number) {
     const payload = { email: userEmail, sub: userId };
-    const token = await this.jwt.signAsync(payload);
+    const token = this.jwt.signAsync(payload);
     return {
       access_token: token,
-      isOnboarded: isOnboarded,
-      user: {
-        id: userId,
-        email: userEmail,
-        isOnboarded: isOnboarded,
-      },
     };
   }
   //
