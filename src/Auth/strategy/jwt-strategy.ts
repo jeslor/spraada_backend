@@ -1,8 +1,11 @@
-import { ExtractJwt, Strategy } from 'passport-jwt';
+import { Strategy } from 'passport-jwt';
 import { PassportStrategy } from '@nestjs/passport';
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import PrismaService from 'src/prisma/prisma.service';
 import { ConfigService } from '@nestjs/config';
+import { Request } from 'express'; // Import Request type
+
+const COOKIE_NAME = 'access_token'; // Ensure this matches the name used in your AuthController
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -11,13 +14,19 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     private configService: ConfigService,
   ) {
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      jwtFromRequest: (req: Request) => {
+        if (req && req.cookies) {
+          return req.cookies[COOKIE_NAME];
+        }
+        return null;
+      },
       ignoreExpiration: false,
       secretOrKey: configService.get('JWT_SECRET'),
     });
   }
 
-  async validate(payload: any) {
+  // ... (Your existing validate method remains the same)
+  async validate(payload: { sub: number; email: string }) {
     try {
       const foundUser = await this.prisma.user.findUnique({
         where: { id: payload.sub },
