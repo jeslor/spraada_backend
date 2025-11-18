@@ -10,7 +10,7 @@ export default class AuthService {
     private prisma: PrismaService,
     private jwt: JwtService,
   ) {}
-  async signIn(dto: SigninDto) {
+  async signIn(dto: SigninDto): Promise<{ access_token: string }> {
     try {
       const foundUser = await this.prisma.user.findUnique({
         where: { email: dto.email },
@@ -25,7 +25,7 @@ export default class AuthService {
     }
   }
 
-  async signUp(dto: SigninDto) {
+  async signUp(dto: SigninDto): Promise<{ access_token: string }> {
     //
     try {
       const hashedPassword = await Argon.hash(dto.password);
@@ -35,6 +35,8 @@ export default class AuthService {
           hash: hashedPassword,
         },
       });
+
+      if (!newUser) throw new ForbiddenException('failed to create user');
       return this.generateToken(newUser.email, newUser.id);
     } catch (error) {
       throw error;
@@ -42,7 +44,7 @@ export default class AuthService {
   }
   async generateToken(userEmail: string, userId: number) {
     const payload = { email: userEmail, sub: userId };
-    const token = this.jwt.signAsync(payload);
+    const token = await this.jwt.signAsync(payload);
     return {
       access_token: token,
     };
