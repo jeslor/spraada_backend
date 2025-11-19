@@ -14,20 +14,26 @@ export default class AuthService {
     private prisma: PrismaService,
     private jwt: JwtService,
   ) {}
-  async signIn(dto: SigninDto): Promise<string> {
+  async signIn(
+    dto: SigninDto,
+  ): Promise<{ access_token: string; id: number; email: string }> {
     try {
       const foundUser = await this.findByEmail(dto.email);
       if (!foundUser) throw new ForbiddenException('user not found');
 
       const pwMatches = await Argon.verify(foundUser.hash, dto.password);
       if (!pwMatches) throw new ForbiddenException('incorrect password');
-      return this.generateToken(foundUser.email, foundUser.id);
+      const token = await this.generateToken(foundUser.email, foundUser.id);
+
+      return { access_token: token, id: foundUser.id, email: foundUser.email };
     } catch (error) {
       throw error;
     }
   }
 
-  async signUp(dto: SigninDto): Promise<string> {
+  async signUp(
+    dto: SigninDto,
+  ): Promise<{ access_token: string; id: number; email: string }> {
     //
     try {
       const existingUser = await this.findByEmail(dto.email);
@@ -42,7 +48,12 @@ export default class AuthService {
       });
 
       if (!newUser) throw new ForbiddenException('failed to create user');
-      return this.generateToken(newUser.email, newUser.id);
+      const token = await this.generateToken(newUser.email, newUser.id);
+      return {
+        access_token: token,
+        id: newUser.id,
+        email: newUser.email,
+      };
     } catch (error) {
       throw error;
     }

@@ -47,13 +47,13 @@ export default class AuthController {
     }
 
     // 1. Get the raw token string from the AuthService (AuthService must be updated to return string)
-    const token = await this.authService.signIn(dto);
+    const { access_token, id, email } = await this.authService.signIn(dto);
 
     // 2. Set the secure HTTP-only cookie
-    this.setJwtCookie(res, token);
+    this.setJwtCookie(res, access_token);
 
     // 3. Return a successful, token-less response body
-    return { message: 'Signed in successfully' };
+    return { message: 'User logged in successfully', id, email };
   }
 
   @Post('sign-up')
@@ -73,12 +73,13 @@ export default class AuthController {
     const { confirmPassword, ...signUpData } = dto;
 
     // 1. Get the raw token string from the AuthService (AuthService must be updated to return string)
-    const token = await this.authService.signUp(signUpData);
+    const { access_token, id, email } =
+      await this.authService.signUp(signUpData);
 
     // 2. Set the secure HTTP-only cookie
-    this.setJwtCookie(res, token);
+    this.setJwtCookie(res, access_token);
 
     // 3. Return a successful, token-less response body
-    return { message: 'User registered successfully' };
+    return { message: 'User registered successfully', id, email };
   }
 }
