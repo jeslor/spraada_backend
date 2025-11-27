@@ -63,7 +63,7 @@ export default class AuthService {
     return this.prisma.user.findUnique({ where: { email } });
   }
   async generateToken(userEmail: string, userId: number): Promise<string> {
-    const payload = { email: userEmail, sub: userId };
+    const payload: AuthJwtPayload = { email: userEmail, sub: userId };
     const token = await this.jwt.signAsync(payload);
     return token;
   }
