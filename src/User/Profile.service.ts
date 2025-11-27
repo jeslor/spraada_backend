@@ -17,13 +17,6 @@ export class ProfileService {
     });
     return newProfile;
   }
-  async findUserById(id: number) {
-    const foundUser = await this.prisma.user.findUnique({ where: { id } });
-    if (!foundUser) {
-      throw new ForbiddenException('user not found');
-    }
-    return foundUser;
-  }
 
   async updateUser(id: number, dto: EditProfileDto) {
     // Implement the logic to update user details in the database using Prisma or any other ORM

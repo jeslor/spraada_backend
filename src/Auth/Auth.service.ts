@@ -59,8 +59,19 @@ export default class AuthService {
     }
   }
 
+  //return full user object with the hash
   async findUserByEmail(email: string) {
     return this.prisma.user.findUnique({ where: { email } });
+  }
+
+  //return user object without the hash
+  async findUserById(id: number) {
+    const foundUser = await this.prisma.user.findUnique({ where: { id } });
+    if (!foundUser) {
+      throw new ForbiddenException('user not found');
+    }
+    const { hash, ...userwithoutHash } = foundUser;
+    return userwithoutHash;
   }
 
   async generateToken(userEmail: string, userId: number): Promise<string> {
