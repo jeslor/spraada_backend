@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable } from '@nestjs/common';
 import PrismaService from 'src/prisma/prisma.service';
 import { CreateProfileDto, EditProfileDto } from './dto';
 import { User } from '@prisma/client';
@@ -16,13 +16,6 @@ export class ProfileService {
       },
     });
     return newProfile;
-  }
-  async getProfileById(userId: number) {
-    // Implement the logic to fetch user details from the database using Prisma or any other ORM
-    const user = await this.prisma.profile.findUnique({
-      where: { userId },
-    });
-    return user;
   }
 
   async updateUser(id: number, dto: EditProfileDto) {
