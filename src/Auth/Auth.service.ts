@@ -18,7 +18,7 @@ export default class AuthService {
     dto: SigninDto,
   ): Promise<{ access_token: string; id: number; email: string }> {
     try {
-      const foundUser = await this.findByEmail(dto.email);
+      const foundUser = await this.findUserByEmail(dto.email);
       if (!foundUser) throw new ForbiddenException('user not found');
 
       const pwMatches = await Argon.verify(foundUser.hash, dto.password);
@@ -36,7 +36,7 @@ export default class AuthService {
   ): Promise<{ access_token: string; id: number; email: string }> {
     //
     try {
-      const existingUser = await this.findByEmail(dto.email);
+      const existingUser = await this.findUserByEmail(dto.email);
       if (existingUser) throw new ConflictException('email already registered');
 
       const hashedPassword = await Argon.hash(dto.password);
@@ -59,9 +59,10 @@ export default class AuthService {
     }
   }
 
-  async findByEmail(email: string) {
+  async findUserByEmail(email: string) {
     return this.prisma.user.findUnique({ where: { email } });
   }
+
   async generateToken(userEmail: string, userId: number): Promise<string> {
     const payload: AuthJwtPayload = { email: userEmail, sub: userId };
     const token = await this.jwt.signAsync(payload);

@@ -1,12 +1,20 @@
 import type { User } from '.prisma/client/wasm';
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { GetUser } from 'src/Auth/decorator/user.decorator';
 import { JwtAuthGuard } from 'src/Auth/guard/auth.guard';
 import { ProfileService } from './Profile.service';
 import { CreateProfileDto, EditProfileDto } from './dto';
 
 @UseGuards(JwtAuthGuard)
-@Controller('dashboard/user')
+@Controller('/profile')
 export class ProfileController {
   constructor(private userService: ProfileService) {}
 
@@ -16,9 +24,11 @@ export class ProfileController {
   }
 
   @Get('/:id')
-  async getUser(@Param('id') id: number) {
+  async getUser(@Param('id') id: number, @Req() req) {
+    console.log(req);
+
     try {
-      return this.userService.getProfileById(id);
+      return this.userService.findUserById(id);
     } catch (error) {
       return { message: 'Error fetching user', error };
     }
