@@ -8,6 +8,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { ProfileService } from 'src/Profile/Profile.service';
 import { StringValue } from 'ms';
 import refreshTokenConfig from './config/refresh-token.config.ts';
+import { RefreshAuthGuard } from './guard/refresh-auth/refresh-auth.guard';
 
 @Module({
   imports: [
@@ -25,6 +26,6 @@ import refreshTokenConfig from './config/refresh-token.config.ts';
     ConfigModule.forFeature(refreshTokenConfig),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, ProfileService],
+  providers: [AuthService, JwtStrategy, ProfileService, RefreshAuthGuard],
 })
 export default class AuthModule {}

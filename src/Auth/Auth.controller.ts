@@ -33,7 +33,6 @@ export default class AuthController {
     @Body() dto: SigninDto,
     @Res({ passthrough: true }) res: Response, // ⬅️ Inject the response object
   ): Promise<RegisterAndSignInResponse> {
-    console.log(dto, 'dto from user in the auth controller');
     if (!dto.email || !dto.password) {
       throw new Error('Invalid credentials');
     }
@@ -48,7 +47,6 @@ export default class AuthController {
     @Body() dto: SignupDto,
     @Res({ passthrough: true }) res: Response, // ⬅️ Inject the response object
   ): Promise<RegisterAndSignInResponse> {
-    console.log(dto, 'dto from user in the sign up controller');
     if (!dto.email || !dto.password) {
       throw new Error('Invalid credentials');
     }
@@ -59,5 +57,14 @@ export default class AuthController {
     const { confirmPassword, ...signUpData } = dto;
     // Call the AuthService to handle user registration and send back the registered user data with the access token and refresh token
     return await this.authService.signUp(signUpData);
+  }
+
+  @Post('refresh-token')
+  async RefreshToken(@Body('refresh_token') refreshToken: string, @Req() req) {
+    if (!refreshToken) {
+      throw new Error('No refresh token provided');
+    }
+
+    return this.authService.refreshTokens(refreshToken, req.user);
   }
 }

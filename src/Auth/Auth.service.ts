@@ -127,7 +127,32 @@ export default class AuthService {
       throw error;
     }
   }
-  async validateHash() {
-    //
+  async validateRefreshToken(userId: number) {
+    try {
+      return await this.findUserById(userId);
+    } catch (error) {
+      return error;
+    }
+  }
+
+  async refreshTokens(
+    refreshToken: string,
+    user: { id: number; email: string },
+  ) {
+    try {
+      const { refresh_token, access_token } = await this.generateToken(
+        user.email,
+        user.id,
+      );
+
+      return {
+        access_token: access_token,
+        refresh_token: refresh_token,
+        id: user.id,
+        email: user.email,
+      };
+    } catch (error) {
+      throw error;
+    }
   }
 }
