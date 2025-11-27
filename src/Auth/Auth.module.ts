@@ -7,6 +7,7 @@ import { JwtStrategy } from './strategy';
 import { JwtModule } from '@nestjs/jwt';
 import { ProfileService } from 'src/Profile/Profile.service';
 import { StringValue } from 'ms';
+import refreshTokenConfig from './config/refresh-token.config.ts';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { StringValue } from 'ms';
       }),
       inject: [ConfigService],
     }),
+    ConfigModule.forFeature(refreshTokenConfig),
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy, ProfileService],

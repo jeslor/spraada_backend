@@ -29,8 +29,6 @@ export class ProfileController {
 
   @Get('/:id')
   async getUser(@Param('id') id: number, @Req() req) {
-    console.log(req);
-
     try {
       return this.authService.findUserById(id);
     } catch (error) {

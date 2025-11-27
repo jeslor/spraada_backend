@@ -11,6 +11,18 @@ import * as Argon from 'argon2';
 import refreshTokenConfig from './config/refresh-token.config.ts';
 import type { ConfigType } from '@nestjs/config';
 
+interface GenerateTokenResult {
+  access_token: string;
+  refresh_token: string;
+}
+
+interface signInResult {
+  access_token: string;
+  refresh_token: string;
+  id: number;
+  email: string;
+}
+
 @Injectable()
 export default class AuthService {
   constructor(
@@ -23,12 +35,7 @@ export default class AuthService {
   ) {}
 
   //sign in existing user, validate password, return tokens, id and email
-  async signIn(dto: SigninDto): Promise<{
-    access_token: string;
-    refresh_token: string;
-    id: number;
-    email: string;
-  }> {
+  async signIn(dto: SigninDto): Promise<signInResult> {
     try {
       const foundUser = await this.findUserByEmail(dto.email);
       if (!foundUser) throw new ForbiddenException('user not found');
@@ -52,12 +59,7 @@ export default class AuthService {
   }
 
   //sign up new user, check if email exists, hash password, return tokens, id and email
-  async signUp(dto: SigninDto): Promise<{
-    access_token: string;
-    refresh_token: string;
-    id: number;
-    email: string;
-  }> {
+  async signUp(dto: SigninDto): Promise<signInResult> {
     //
     try {
       const existingUser = await this.findUserByEmail(dto.email);
@@ -106,10 +108,7 @@ export default class AuthService {
   async generateToken(
     userEmail: string,
     userId: number,
-  ): Promise<{
-    access_token: string;
-    refresh_token: string;
-  }> {
+  ): Promise<GenerateTokenResult> {
     const payload: AuthJwtPayload = { email: userEmail, sub: userId };
     const [accessToken, refreshToken] = await Promise.all([
       await this.jwt.signAsync(payload),
