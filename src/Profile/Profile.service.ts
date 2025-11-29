@@ -18,6 +18,14 @@ export class ProfileService {
     return newProfile;
   }
 
+  async getProfileByUserId(userId: number) {
+    // Implement the logic to get user profile by userId from the database using Prisma or any other ORM
+    const profile = await this.prisma.profile.findUnique({
+      where: { userId },
+    });
+    return profile;
+  }
+
   async updateUser(id: number, dto: EditProfileDto) {
     // Implement the logic to update user details in the database using Prisma or any other ORM
     const updatedUser = await this.prisma.profile.update({

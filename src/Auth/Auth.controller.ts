@@ -12,6 +12,7 @@ import {
 import type { Response } from 'express'; // ⬅️ Import Response type from express
 import { SigninDto, SignupDto } from './dto';
 import AuthService from './Auth.service';
+import { RefreshTokenDto } from './dto/refreshToken.dto';
 // import { JwtAuthGuard } from './guard'; // Keep if you use it elsewhere
 
 const COOKIE_NAME = 'access_token'; // ⬅️ Define your cookie name
@@ -59,12 +60,14 @@ export default class AuthController {
     return await this.authService.signUp(signUpData);
   }
 
-  @Post('refresh-token')
-  async RefreshToken(@Body('refresh_token') refreshToken: string, @Req() req) {
-    if (!refreshToken) {
+  @Post('refresh-tokens')
+  async RefreshToken(
+    @Body() tokenDto: RefreshTokenDto,
+  ): Promise<{ access_token: string; refresh_token: string }> {
+    if (!tokenDto.refresh_token || !tokenDto.email || !tokenDto.id) {
       throw new Error('No refresh token provided');
     }
 
-    return this.authService.refreshTokens(refreshToken, req.user);
+    return this.authService.refreshTokens(tokenDto);
   }
 }

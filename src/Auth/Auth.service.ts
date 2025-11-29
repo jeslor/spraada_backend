@@ -10,6 +10,7 @@ import PrismaService from 'src/prisma/prisma.service';
 import * as Argon from 'argon2';
 import refreshTokenConfig from './config/refresh-token.config.ts';
 import type { ConfigType } from '@nestjs/config';
+import { RefreshTokenDto } from './dto/refreshToken.dto';
 
 interface GenerateTokenResult {
   access_token: string;
@@ -60,6 +61,8 @@ export default class AuthService {
 
   //sign up new user, check if email exists, hash password, return tokens, id and email
   async signUp(dto: SigninDto): Promise<signInResult> {
+    console.log(dto, 'in the actions');
+
     //
     try {
       const existingUser = await this.findUserByEmail(dto.email);
@@ -135,21 +138,16 @@ export default class AuthService {
     }
   }
 
-  async refreshTokens(
-    refreshToken: string,
-    user: { id: number; email: string },
-  ) {
+  async refreshTokens({ refresh_token, email, id }: RefreshTokenDto) {
     try {
       const { refresh_token, access_token } = await this.generateToken(
-        user.email,
-        user.id,
+        email,
+        id,
       );
 
       return {
         access_token: access_token,
         refresh_token: refresh_token,
-        id: user.id,
-        email: user.email,
       };
     } catch (error) {
       throw error;

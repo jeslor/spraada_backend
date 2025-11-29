@@ -4,6 +4,7 @@ import {
   Controller,
   Get,
   Param,
+  Patch,
   Post,
   Req,
   UseGuards,
@@ -15,7 +16,7 @@ import { CreateProfileDto, EditProfileDto } from './dto';
 import AuthService from 'src/Auth/Auth.service';
 
 @UseGuards(JwtAuthGuard)
-@Controller('/profile')
+@Controller('profile')
 export class ProfileController {
   constructor(
     private authService: AuthService,
@@ -29,13 +30,21 @@ export class ProfileController {
 
   @Get('/:id')
   async getUser(@Param('id') id: number, @Req() req) {
+    console.log(id);
+    //get user profile using profile service
+    //check if user is onboarded else return a specific error to cause frontend to redirect to onboarding
+    //use auth service to get user by id
     try {
-      return this.authService.findUserById(id);
+      //Foe now just return the message of user profile successfully fetched, plus the user ID
+      return JSON.stringify({
+        message: 'User profile successfully fetched',
+        userId: id,
+      });
     } catch (error) {
       return { message: 'Error fetching user', error };
     }
   }
-  @Post('/:id')
+  @Patch('/:id')
   async updateUser(
     @GetUser() user: User,
     @Param('id') id: number,
