@@ -12,9 +12,17 @@ import {
 import type { Response } from 'express'; // ⬅️ Import Response type from express
 import { SigninDto, SignupDto } from './dto';
 import AuthService from './Auth.service';
+import { RefreshTokenDto } from './dto/refreshToken.dto';
 // import { JwtAuthGuard } from './guard'; // Keep if you use it elsewhere
 
 const COOKIE_NAME = 'access_token'; // ⬅️ Define your cookie name
+
+interface RegisterAndSignInResponse {
+  access_token: string;
+  refresh_token: string;
+  id: number;
+  email: string;
+}
 
 @Controller('auth')
 export default class AuthController {
@@ -25,17 +33,13 @@ export default class AuthController {
   async Login(
     @Body() dto: SigninDto,
     @Res({ passthrough: true }) res: Response, // ⬅️ Inject the response object
-  ) {
-    console.log(dto, 'dto from user in the auth controller');
+  ): Promise<RegisterAndSignInResponse> {
     if (!dto.email || !dto.password) {
       throw new Error('Invalid credentials');
     }
 
-    // 1. Get the raw token string from the AuthService (AuthService must be updated to return string)
-    const { access_token, id, email } = await this.authService.signIn(dto);
-
-    // 2. Return a successful, token-less response body
-    return { message: 'User logged in successfully', id, email, access_token };
+    // Call the AuthService to handle user sign-in and send back the user data with the access token and refresh token
+    return await this.authService.signIn(dto);
   }
 
   @Post('sign-up')
@@ -43,8 +47,7 @@ export default class AuthController {
   async Register(
     @Body() dto: SignupDto,
     @Res({ passthrough: true }) res: Response, // ⬅️ Inject the response object
-  ) {
-    console.log(dto, 'dto from user in the sign up controller');
+  ): Promise<RegisterAndSignInResponse> {
     if (!dto.email || !dto.password) {
       throw new Error('Invalid credentials');
     }
@@ -53,12 +56,18 @@ export default class AuthController {
     }
 
     const { confirmPassword, ...signUpData } = dto;
+    // Call the AuthService to handle user registration and send back the registered user data with the access token and refresh token
+    return await this.authService.signUp(signUpData);
+  }
 
-    // 1. Get the raw token string from the AuthService (AuthService must be updated to return string)
-    const { access_token, id, email } =
-      await this.authService.signUp(signUpData);
+  @Post('refresh-tokens')
+  async RefreshToken(
+    @Body() tokenDto: RefreshTokenDto,
+  ): Promise<{ access_token: string; refresh_token: string }> {
+    if (!tokenDto.refresh_token || !tokenDto.email || !tokenDto.id) {
+      throw new Error('No refresh token provided');
+    }
 
-    // 2. Return a successful, token-less response body
-    return { message: 'User registered successfully', id, email, access_token };
+    return this.authService.refreshTokens(tokenDto);
   }
 }

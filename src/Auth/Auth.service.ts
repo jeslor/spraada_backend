@@ -1,39 +1,68 @@
 import {
   ConflictException,
   ForbiddenException,
+  Inject,
   Injectable,
 } from '@nestjs/common';
 import { SigninDto } from './dto';
 import { JwtService } from '@nestjs/jwt';
 import PrismaService from 'src/prisma/prisma.service';
 import * as Argon from 'argon2';
+import refreshTokenConfig from './config/refresh-token.config.ts';
+import type { ConfigType } from '@nestjs/config';
+import { RefreshTokenDto } from './dto/refreshToken.dto';
+
+interface GenerateTokenResult {
+  access_token: string;
+  refresh_token: string;
+}
+
+interface signInResult {
+  access_token: string;
+  refresh_token: string;
+  id: number;
+  email: string;
+}
 
 @Injectable()
 export default class AuthService {
   constructor(
     private prisma: PrismaService,
     private jwt: JwtService,
+    @Inject(refreshTokenConfig.KEY)
+    private readonly refreshTokenConfiguration: ConfigType<
+      typeof refreshTokenConfig
+    >,
   ) {}
-  async signIn(
-    dto: SigninDto,
-  ): Promise<{ access_token: string; id: number; email: string }> {
+
+  //sign in existing user, validate password, return tokens, id and email
+  async signIn(dto: SigninDto): Promise<signInResult> {
     try {
       const foundUser = await this.findUserByEmail(dto.email);
       if (!foundUser) throw new ForbiddenException('user not found');
 
       const pwMatches = await Argon.verify(foundUser.hash, dto.password);
       if (!pwMatches) throw new ForbiddenException('incorrect password');
-      const token = await this.generateToken(foundUser.email, foundUser.id);
+      const { refresh_token, access_token } = await this.generateToken(
+        foundUser.email,
+        foundUser.id,
+      );
 
-      return { access_token: token, id: foundUser.id, email: foundUser.email };
+      return {
+        access_token: access_token,
+        refresh_token: refresh_token,
+        id: foundUser.id,
+        email: foundUser.email,
+      };
     } catch (error) {
       throw error;
     }
   }
 
-  async signUp(
-    dto: SigninDto,
-  ): Promise<{ access_token: string; id: number; email: string }> {
+  //sign up new user, check if email exists, hash password, return tokens, id and email
+  async signUp(dto: SigninDto): Promise<signInResult> {
+    console.log(dto, 'in the actions');
+
     //
     try {
       const existingUser = await this.findUserByEmail(dto.email);
@@ -48,9 +77,13 @@ export default class AuthService {
       });
 
       if (!newUser) throw new ForbiddenException('failed to create user');
-      const token = await this.generateToken(newUser.email, newUser.id);
+      const { refresh_token, access_token } = await this.generateToken(
+        newUser.email,
+        newUser.id,
+      );
       return {
-        access_token: token,
+        access_token: access_token,
+        refresh_token: refresh_token,
         id: newUser.id,
         email: newUser.email,
       };
@@ -74,19 +107,50 @@ export default class AuthService {
     return userwithoutHash;
   }
 
-  async generateToken(userEmail: string, userId: number): Promise<string> {
+  //generate both access and refresh tokens
+  async generateToken(
+    userEmail: string,
+    userId: number,
+  ): Promise<GenerateTokenResult> {
     const payload: AuthJwtPayload = { email: userEmail, sub: userId };
-    const token = await this.jwt.signAsync(payload);
-    return token;
+    const [accessToken, refreshToken] = await Promise.all([
+      await this.jwt.signAsync(payload),
+      await this.createRefreshToken(payload),
+    ]);
+    return {
+      access_token: accessToken,
+      refresh_token: refreshToken,
+    };
   }
-  //
-  async verifyToken() {
-    //
+
+  async createRefreshToken(payload: AuthJwtPayload): Promise<string> {
+    try {
+      return await this.jwt.signAsync(payload, this.refreshTokenConfiguration);
+    } catch (error) {
+      throw error;
+    }
   }
-  async refreshToken() {
-    //
+  async validateRefreshToken(userId: number) {
+    try {
+      return await this.findUserById(userId);
+    } catch (error) {
+      return error;
+    }
   }
-  async validateHash() {
-    //
+
+  async refreshTokens({ refresh_token, email, id }: RefreshTokenDto) {
+    try {
+      const { refresh_token, access_token } = await this.generateToken(
+        email,
+        id,
+      );
+
+      return {
+        access_token: access_token,
+        refresh_token: refresh_token,
+      };
+    } catch (error) {
+      throw error;
+    }
   }
 }

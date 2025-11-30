@@ -5,7 +5,10 @@ import { PassportModule } from '@nestjs/passport';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtStrategy } from './strategy';
 import { JwtModule } from '@nestjs/jwt';
-import { ProfileService } from 'src/User/Profile.service';
+import { ProfileService } from 'src/Profile/Profile.service';
+import { StringValue } from 'ms';
+import refreshTokenConfig from './config/refresh-token.config.ts';
+import { RefreshAuthGuard } from './guard/refresh-auth/refresh-auth.guard';
 
 @Module({
   imports: [
@@ -15,13 +18,14 @@ import { ProfileService } from 'src/User/Profile.service';
       useFactory: async (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET'),
         signOptions: {
-          expiresIn: '10m',
+          expiresIn: configService.get<StringValue>('JWT_EXPIRES_IN'),
         },
       }),
       inject: [ConfigService],
     }),
+    ConfigModule.forFeature(refreshTokenConfig),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, ProfileService],
+  providers: [AuthService, JwtStrategy, ProfileService, RefreshAuthGuard],
 })
 export default class AuthModule {}

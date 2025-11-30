@@ -4,6 +4,7 @@ import {
   Controller,
   Get,
   Param,
+  Patch,
   Post,
   Req,
   UseGuards,
@@ -12,35 +13,45 @@ import { GetUser } from 'src/Auth/decorator/user.decorator';
 import { JwtAuthGuard } from 'src/Auth/guard/auth.guard';
 import { ProfileService } from './Profile.service';
 import { CreateProfileDto, EditProfileDto } from './dto';
+import AuthService from 'src/Auth/Auth.service';
 
 @UseGuards(JwtAuthGuard)
-@Controller('/profile')
+@Controller('profile')
 export class ProfileController {
-  constructor(private userService: ProfileService) {}
+  constructor(
+    private authService: AuthService,
+    private profileService: ProfileService,
+  ) {}
 
   @Post()
   CreateProfile(@GetUser() user: User, @Body() dto: CreateProfileDto) {
-    return this.userService.createProfile(user, { ...dto });
+    return this.profileService.createProfile(user, { ...dto });
   }
 
   @Get('/:id')
   async getUser(@Param('id') id: number, @Req() req) {
-    console.log(req);
-
+    console.log(id);
+    //get user profile using profile service
+    //check if user is onboarded else return a specific error to cause frontend to redirect to onboarding
+    //use auth service to get user by id
     try {
-      return this.userService.findUserById(id);
+      //Foe now just return the message of user profile successfully fetched, plus the user ID
+      return JSON.stringify({
+        message: 'User profile successfully fetched',
+        userId: id,
+      });
     } catch (error) {
       return { message: 'Error fetching user', error };
     }
   }
-  @Post('/:id')
+  @Patch('/:id')
   async updateUser(
     @GetUser() user: User,
     @Param('id') id: number,
     @Body() dto: EditProfileDto,
   ) {
     try {
-      return this.userService.updateUser(id, dto);
+      return this.profileService.updateUser(id, dto);
     } catch (error) {
       return { message: 'Error updating user', error };
     }
