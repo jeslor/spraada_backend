@@ -30,7 +30,6 @@ export class ProfileController {
 
   @Get('/:id')
   async getUser(@Param('id') id: number, @Req() req) {
-    console.log(id);
     //get user profile using profile service
     //check if user is onboarded else return a specific error to cause frontend to redirect to onboarding
     //use auth service to get user by id
