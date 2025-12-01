@@ -6,7 +6,7 @@ import type { ConfigType } from '@nestjs/config';
 import AuthService from '../Auth.service';
 
 @Injectable()
-export class GoogleStrategy extends PassportStrategy(Strategy) {
+export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
   constructor(
     @Inject(googleOathConfig.KEY)
     private readonly googleConfig: ConfigType<typeof googleOathConfig>,
@@ -37,11 +37,11 @@ export class GoogleStrategy extends PassportStrategy(Strategy) {
 
     done(null, user);
 
-    return {
-      id: user.id,
-      email: user.email,
-      access_token: user.access_token,
-      refresh_token: user.refresh_token,
-    };
+    // return {
+    //   id: user.id,
+    //   email: user.email,
+    //   access_token: user.access_token,
+    //   refresh_token: user.refresh_token,
+    // };
   }
 }

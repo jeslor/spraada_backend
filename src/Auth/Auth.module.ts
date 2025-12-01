@@ -8,9 +8,9 @@ import { JwtModule } from '@nestjs/jwt';
 import { ProfileService } from 'src/Profile/Profile.service';
 import { StringValue } from 'ms';
 import refreshTokenConfig from './config/refresh-token.config.ts';
-import { RefreshAuthGuard } from './guard/refresh-auth/refresh-auth.guard';
 import googleOathConfig from './config/googleOath.config';
-import { GoogleAuthGuard } from './guard/google-auth/google-auth.guard';
+import { GoogleAuthGuard, RefreshAuthGuard } from './guard';
+import { GoogleStrategy } from './strategy/google.strategy';
 
 @Module({
   imports: [
@@ -34,6 +34,7 @@ import { GoogleAuthGuard } from './guard/google-auth/google-auth.guard';
     JwtStrategy,
     ProfileService,
     RefreshAuthGuard,
+    GoogleStrategy,
     GoogleAuthGuard,
   ],
 })
