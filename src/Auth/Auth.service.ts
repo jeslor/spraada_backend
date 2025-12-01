@@ -61,8 +61,6 @@ export default class AuthService {
 
   //sign up new user, check if email exists, hash password, return tokens, id and email
   async signUp(dto: SigninDto): Promise<signInResult> {
-    console.log(dto, 'in the actions');
-
     //
     try {
       const existingUser = await this.findUserByEmail(dto.email);
