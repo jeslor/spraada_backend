@@ -9,6 +9,8 @@ import { ProfileService } from 'src/Profile/Profile.service';
 import { StringValue } from 'ms';
 import refreshTokenConfig from './config/refresh-token.config.ts';
 import { RefreshAuthGuard } from './guard/refresh-auth/refresh-auth.guard';
+import googleOathConfig from './config/googleOath.config';
+import { GoogleAuthGuard } from './guard/google-auth/google-auth.guard';
 
 @Module({
   imports: [
@@ -24,8 +26,15 @@ import { RefreshAuthGuard } from './guard/refresh-auth/refresh-auth.guard';
       inject: [ConfigService],
     }),
     ConfigModule.forFeature(refreshTokenConfig),
+    ConfigModule.forFeature(googleOathConfig),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, ProfileService, RefreshAuthGuard],
+  providers: [
+    AuthService,
+    JwtStrategy,
+    ProfileService,
+    RefreshAuthGuard,
+    GoogleAuthGuard,
+  ],
 })
 export default class AuthModule {}
