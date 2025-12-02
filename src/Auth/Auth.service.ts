@@ -12,6 +12,11 @@ import refreshTokenConfig from './config/refresh-token.config.ts';
 import type { ConfigType } from '@nestjs/config';
 import { RefreshTokenDto } from './dto/refreshToken.dto';
 
+interface AuthJwtPayload {
+  email: string;
+  sub: number;
+}
+
 interface GenerateTokenResult {
   access_token: string;
   refresh_token: string;
