@@ -9,11 +9,11 @@ import {
   Get,
   UseGuards,
 } from '@nestjs/common';
-import type { Response } from 'express';
+import type { Request, Response } from 'express';
 import { SigninDto, SignupDto } from './dto';
 import AuthService from './Auth.service';
 import { RefreshTokenDto } from './dto/refreshToken.dto';
-import { GoogleAuthGuard } from './guard';
+import { GoogleAuthGuard, JwtAuthGuard } from './guard';
 
 interface RegisterAndSignInResponse {
   access_token: string;
@@ -72,7 +72,7 @@ export default class AuthController {
 
   @UseGuards(GoogleAuthGuard)
   @Get('google/callback')
-  async googleLoginCallback(@Req() req: any, @Res() res: Response) {
+  async googleLoginCallback(@Req() req, @Res() res: Response) {
     res.redirect(
       `${process.env.FRONTEND_URL}/api/auth/google/callback?` +
         `access_token=${req.user.access_token}&` +
@@ -80,5 +80,18 @@ export default class AuthController {
         `email=${req.user.email}&` +
         `id=${req.user.id}`,
     );
+  }
+
+  // @UseGuards(JwtAuthGuard)
+  @Post('sign-out')
+  async signOut(@Req() req, @Res() res: Response) {
+    const id = Number(req.body.id);
+    const userSignedOut = await this.authService.signOut(id);
+
+    if (!userSignedOut) {
+      res.status(500).json({ error: 'Failed to sign out user' });
+    } else {
+      res.status(200).json({ message: 'Signed out successfully' });
+    }
   }
 }
