@@ -1,24 +1,19 @@
-// src/auth/auth.controller.ts
-
 import {
   Body,
   Controller,
   Post,
-  Request as Req, // Renamed to avoid collision with express Response
-  Res, // Import Res decorator
+  Request as Req,
+  Res,
   HttpCode,
   HttpStatus,
   Get,
   UseGuards,
 } from '@nestjs/common';
-import type { Response } from 'express'; // ⬅️ Import Response type from express
+import type { Request, Response } from 'express';
 import { SigninDto, SignupDto } from './dto';
 import AuthService from './Auth.service';
 import { RefreshTokenDto } from './dto/refreshToken.dto';
-import { GoogleAuthGuard } from './guard';
-// import { JwtAuthGuard } from './guard'; // Keep if you use it elsewhere
-
-const COOKIE_NAME = 'access_token'; // ⬅️ Define your cookie name
+import { GoogleAuthGuard, JwtAuthGuard } from './guard';
 
 interface RegisterAndSignInResponse {
   access_token: string;
@@ -35,13 +30,12 @@ export default class AuthController {
   @HttpCode(HttpStatus.OK)
   async Login(
     @Body() dto: SigninDto,
-    @Res({ passthrough: true }) res: Response, // ⬅️ Inject the response object
+    @Res({ passthrough: true }) res: Response,
   ): Promise<RegisterAndSignInResponse> {
     if (!dto.email || !dto.password) {
       throw new Error('Invalid credentials');
     }
 
-    // Call the AuthService to handle user sign-in and send back the user data with the access token and refresh token
     return await this.authService.signIn(dto);
   }
 
@@ -49,7 +43,7 @@ export default class AuthController {
   @HttpCode(HttpStatus.CREATED)
   async Register(
     @Body() dto: SignupDto,
-    @Res({ passthrough: true }) res: Response, // ⬅️ Inject the response object
+    @Res({ passthrough: true }) res: Response,
   ): Promise<RegisterAndSignInResponse> {
     if (!dto.email || !dto.password) {
       throw new Error('Invalid credentials');
@@ -59,7 +53,6 @@ export default class AuthController {
     }
 
     const { confirmPassword, ...signUpData } = dto;
-    // Call the AuthService to handle user registration and send back the registered user data with the access token and refresh token
     return await this.authService.signUp(signUpData);
   }
 
@@ -79,9 +72,26 @@ export default class AuthController {
 
   @UseGuards(GoogleAuthGuard)
   @Get('google/callback')
-  googleLoginCallback(@Req() req: any) {
-    console.log('Google user', req.user);
+  async googleLoginCallback(@Req() req, @Res() res: Response) {
+    res.redirect(
+      `${process.env.FRONTEND_URL}/api/auth/google/callback?` +
+        `access_token=${req.user.access_token}&` +
+        `refresh_token=${req.user.refresh_token}&` +
+        `email=${req.user.email}&` +
+        `id=${req.user.id}`,
+    );
+  }
 
-    return req.user;
+  // @UseGuards(JwtAuthGuard)
+  @Post('sign-out')
+  async signOut(@Req() req, @Res() res: Response) {
+    const id = Number(req.body.id);
+    const userSignedOut = await this.authService.signOut(id);
+
+    if (!userSignedOut) {
+      res.status(500).json({ error: 'Failed to sign out user' });
+    } else {
+      res.status(200).json({ message: 'Signed out successfully' });
+    }
   }
 }

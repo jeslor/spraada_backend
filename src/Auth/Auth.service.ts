@@ -12,6 +12,11 @@ import refreshTokenConfig from './config/refresh-token.config.ts';
 import type { ConfigType } from '@nestjs/config';
 import { RefreshTokenDto } from './dto/refreshToken.dto';
 
+interface AuthJwtPayload {
+  email: string;
+  sub: number;
+}
+
 interface GenerateTokenResult {
   access_token: string;
   refresh_token: string;
@@ -47,6 +52,9 @@ export default class AuthService {
         foundUser.email,
         foundUser.id,
       );
+
+      const hashedRefreshToken = await Argon.hash(refresh_token);
+      await this.updateHashedRefreshToken(foundUser.id, hashedRefreshToken);
 
       return {
         access_token: access_token,
@@ -105,6 +113,30 @@ export default class AuthService {
     return userwithoutHash;
   }
 
+  //create a refresh token
+  async createRefreshToken(payload: AuthJwtPayload): Promise<string> {
+    try {
+      return await this.jwt.signAsync(payload, this.refreshTokenConfiguration);
+    } catch (error) {
+      throw error;
+    }
+  }
+  //validate refresh token by comparing with the hashed version in the database
+  async validateRefreshToken(userId: number, hashedRefreshToken: string) {
+    try {
+      const user = await this.findUserById(userId);
+      const refreshTokenIsValid = await Argon.verify(
+        user.hashedRefreshToken!,
+        hashedRefreshToken,
+      );
+      if (!refreshTokenIsValid)
+        throw new ForbiddenException('Invalid refresh token');
+      return user;
+    } catch (error) {
+      return error;
+    }
+  }
+
   //generate both access and refresh tokens
   async generateToken(
     userEmail: string,
@@ -121,41 +153,30 @@ export default class AuthService {
     };
   }
 
-  async createRefreshToken(payload: AuthJwtPayload): Promise<string> {
-    try {
-      return await this.jwt.signAsync(payload, this.refreshTokenConfiguration);
-    } catch (error) {
-      throw error;
-    }
-  }
-  async validateRefreshToken(userId: number) {
-    try {
-      return await this.findUserById(userId);
-    } catch (error) {
-      return error;
-    }
-  }
-
+  //refresh tokens, generate new ones and store the new hashed refresh token
   async refreshTokens({ refresh_token, email, id }: RefreshTokenDto) {
-    console.log(refresh_token);
-
     try {
-      const { refresh_token, access_token } = await this.generateToken(
-        email,
-        id,
-      );
+      // generate new tokens
+      const { refresh_token: newRefreshToken, access_token } =
+        await this.generateToken(email, id);
+
+      // hash and store the new refresh token in the database
+      const hashedRefreshToken = await Argon.hash(newRefreshToken);
+      await this.updateHashedRefreshToken(id, hashedRefreshToken);
 
       return {
         access_token: access_token,
-        refresh_token: refresh_token,
+        refresh_token: newRefreshToken,
       };
     } catch (error) {
       throw error;
     }
   }
 
+  //validate Google login, create user if not exists, generate tokens, store hashed refresh token
   async validateGoogleLogin(googleuserData: SignupDto): Promise<signInResult> {
     try {
+      // Check if user already exists
       let user = await this.findUserByEmail(googleuserData.email);
       if (!user) {
         // Create a new user if not found
@@ -167,12 +188,18 @@ export default class AuthService {
         });
       }
 
+      // extract hash and return user data without it
       const { hash, ...userwithoutHash } = user;
 
+      // generate tokens
       const { refresh_token, access_token } = await this.generateToken(
         user.email,
         user.id,
       );
+
+      // hash and store the refresh token in the database
+      const hashedRefreshToken = await Argon.hash(refresh_token);
+      await this.updateHashedRefreshToken(user.id, hashedRefreshToken);
 
       return {
         access_token: access_token,
@@ -180,6 +207,33 @@ export default class AuthService {
         id: userwithoutHash.id,
         email: userwithoutHash.email,
       };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  //sign out user by clearing the hashed refresh token
+  async signOut(userId: number) {
+    try {
+      await this.updateHashedRefreshToken(userId, null);
+      console.log('User signed out:', userId);
+      return true;
+    } catch (error) {
+      console.error('Error signing out user:', error);
+      return null;
+    }
+  }
+
+  //update the hashed refresh token in the database
+  async updateHashedRefreshToken(
+    userId: number,
+    hashedRefreshToken: string | null,
+  ) {
+    try {
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: { hashedRefreshToken },
+      });
     } catch (error) {
       throw error;
     }
