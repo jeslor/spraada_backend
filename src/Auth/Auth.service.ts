@@ -4,7 +4,7 @@ import {
   Inject,
   Injectable,
 } from '@nestjs/common';
-import { SigninDto } from './dto';
+import { SigninDto, SignupDto } from './dto';
 import { JwtService } from '@nestjs/jwt';
 import PrismaService from 'src/prisma/prisma.service';
 import * as Argon from 'argon2';
@@ -137,6 +137,8 @@ export default class AuthService {
   }
 
   async refreshTokens({ refresh_token, email, id }: RefreshTokenDto) {
+    console.log(refresh_token);
+
     try {
       const { refresh_token, access_token } = await this.generateToken(
         email,
@@ -146,6 +148,37 @@ export default class AuthService {
       return {
         access_token: access_token,
         refresh_token: refresh_token,
+      };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async validateGoogleLogin(googleuserData: SignupDto): Promise<signInResult> {
+    try {
+      let user = await this.findUserByEmail(googleuserData.email);
+      if (!user) {
+        // Create a new user if not found
+        user = await this.prisma.user.create({
+          data: {
+            email: googleuserData.email,
+            hash: '', // No password for Google-authenticated users
+          },
+        });
+      }
+
+      const { hash, ...userwithoutHash } = user;
+
+      const { refresh_token, access_token } = await this.generateToken(
+        user.email,
+        user.id,
+      );
+
+      return {
+        access_token: access_token,
+        refresh_token: refresh_token,
+        id: userwithoutHash.id,
+        email: userwithoutHash.email,
       };
     } catch (error) {
       throw error;

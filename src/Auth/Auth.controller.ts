@@ -8,11 +8,14 @@ import {
   Res, // Import Res decorator
   HttpCode,
   HttpStatus,
+  Get,
+  UseGuards,
 } from '@nestjs/common';
 import type { Response } from 'express'; // ⬅️ Import Response type from express
 import { SigninDto, SignupDto } from './dto';
 import AuthService from './Auth.service';
 import { RefreshTokenDto } from './dto/refreshToken.dto';
+import { GoogleAuthGuard } from './guard';
 // import { JwtAuthGuard } from './guard'; // Keep if you use it elsewhere
 
 const COOKIE_NAME = 'access_token'; // ⬅️ Define your cookie name
@@ -67,7 +70,18 @@ export default class AuthController {
     if (!tokenDto.refresh_token || !tokenDto.email || !tokenDto.id) {
       throw new Error('No refresh token provided');
     }
-
     return this.authService.refreshTokens(tokenDto);
+  }
+
+  @UseGuards(GoogleAuthGuard)
+  @Get('google/login')
+  googleLogin() {}
+
+  @UseGuards(GoogleAuthGuard)
+  @Get('google/callback')
+  googleLoginCallback(@Req() req: any) {
+    console.log('Google user', req.user);
+
+    return req.user;
   }
 }
