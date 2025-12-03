@@ -6,6 +6,7 @@ import PrismaService from 'src/prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigModule } from '@nestjs/config';
 import refreshTokenConfig from 'src/Auth/config/refresh-token.config.ts';
+import { JwtAuthGuard } from 'src/Auth/guard';
 
 @Module({
   imports: [ConfigModule.forFeature(refreshTokenConfig)],
