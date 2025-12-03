@@ -9,7 +9,7 @@ import { ProfileService } from 'src/Profile/Profile.service';
 import { StringValue } from 'ms';
 import refreshTokenConfig from './config/refresh-token.config.ts';
 import googleOathConfig from './config/googleOath.config';
-import { RefreshAuthGuard } from './guard';
+import { JwtAuthGuard, RefreshAuthGuard } from './guard';
 import { GoogleStrategy } from './strategy/google.strategy';
 
 @Module({
@@ -35,6 +35,10 @@ import { GoogleStrategy } from './strategy/google.strategy';
     ProfileService,
     RefreshAuthGuard,
     GoogleStrategy,
+    {
+      provide: 'APP_GUARD',
+      useClass: JwtAuthGuard,
+    },
   ],
 })
 export default class AuthModule {}

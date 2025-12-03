@@ -10,18 +10,13 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { GetUser } from 'src/Auth/decorator/user.decorator';
-import { JwtAuthGuard } from 'src/Auth/guard/auth.guard';
 import { ProfileService } from './Profile.service';
 import { CreateProfileDto, EditProfileDto } from './dto';
-import AuthService from 'src/Auth/Auth.service';
 
-@UseGuards(JwtAuthGuard)
+//Not adding the guard here, as it's already applied globally in AuthModule
 @Controller('profile')
 export class ProfileController {
-  constructor(
-    private authService: AuthService,
-    private profileService: ProfileService,
-  ) {}
+  constructor(private profileService: ProfileService) {}
 
   @Post()
   CreateProfile(@GetUser() user: User, @Body() dto: CreateProfileDto) {

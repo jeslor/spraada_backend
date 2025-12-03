@@ -9,11 +9,12 @@ import {
   Get,
   UseGuards,
 } from '@nestjs/common';
-import type { Request, Response } from 'express';
+import type { Response } from 'express';
 import { SigninDto, SignupDto } from './dto';
 import AuthService from './Auth.service';
 import { RefreshTokenDto } from './dto/refreshToken.dto';
 import { GoogleAuthGuard, JwtAuthGuard } from './guard';
+import { isPublicEndpoint } from './decorator';
 
 interface RegisterAndSignInResponse {
   access_token: string;
@@ -26,6 +27,7 @@ interface RegisterAndSignInResponse {
 export default class AuthController {
   constructor(private authService: AuthService) {}
 
+  @isPublicEndpoint()
   @Post('sign-in')
   @HttpCode(HttpStatus.OK)
   async Login(
@@ -39,6 +41,7 @@ export default class AuthController {
     return await this.authService.signIn(dto);
   }
 
+  @isPublicEndpoint()
   @Post('sign-up')
   @HttpCode(HttpStatus.CREATED)
   async Register(
@@ -56,6 +59,7 @@ export default class AuthController {
     return await this.authService.signUp(signUpData);
   }
 
+  @isPublicEndpoint()
   @Post('refresh-tokens')
   async RefreshToken(
     @Body() tokenDto: RefreshTokenDto,
@@ -66,10 +70,12 @@ export default class AuthController {
     return this.authService.refreshTokens(tokenDto);
   }
 
+  @isPublicEndpoint()
   @UseGuards(GoogleAuthGuard)
   @Get('google/login')
   googleLogin() {}
 
+  @isPublicEndpoint()
   @UseGuards(GoogleAuthGuard)
   @Get('google/callback')
   async googleLoginCallback(@Req() req, @Res() res: Response) {
@@ -82,11 +88,11 @@ export default class AuthController {
     );
   }
 
-  // @UseGuards(JwtAuthGuard)
+  //Not adding the guard here, as it's already applied globally in AuthModule
+  @UseGuards(JwtAuthGuard)
   @Post('sign-out')
   async signOut(@Req() req, @Res() res: Response) {
-    const id = Number(req.body.id);
-    const userSignedOut = await this.authService.signOut(id);
+    const userSignedOut = await this.authService.signOut(req.user.id);
 
     if (!userSignedOut) {
       res.status(500).json({ error: 'Failed to sign out user' });
