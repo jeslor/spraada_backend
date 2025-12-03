@@ -82,11 +82,10 @@ export default class AuthController {
     );
   }
 
-  // @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard)
   @Post('sign-out')
   async signOut(@Req() req, @Res() res: Response) {
-    const id = Number(req.body.id);
-    const userSignedOut = await this.authService.signOut(id);
+    const userSignedOut = await this.authService.signOut(req.user.id);
 
     if (!userSignedOut) {
       res.status(500).json({ error: 'Failed to sign out user' });
