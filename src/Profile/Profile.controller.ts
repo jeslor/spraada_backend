@@ -13,6 +13,7 @@ import { GetUser } from 'src/Auth/decorator/user.decorator';
 import { ProfileService } from './Profile.service';
 import { CreateProfileDto, EditProfileDto } from './dto';
 import { Roles } from 'src/Auth/decorator/roles.decorator';
+import { RoleGuardGuard } from 'src/Auth/guard';
 
 //Not adding the guard here, as it's already applied globally in AuthModule
 @Controller('profile')
@@ -24,7 +25,8 @@ export class ProfileController {
     return this.profileService.createProfile(user, { ...dto });
   }
 
-  @Roles(Role.USER)
+  @Roles('ADMIN')
+  @UseGuards(RoleGuardGuard)
   @Get('/:id')
   async getUser(@Param('id') id: number, @Req() req) {
     //get user profile using profile service

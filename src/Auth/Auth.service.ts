@@ -105,7 +105,10 @@ export default class AuthService {
 
   //return user object without the hash
   async findUserById(id: number) {
-    const foundUser = await this.prisma.user.findUnique({ where: { id } });
+    const foundUser = await this.prisma.user.findUnique({
+      where: { id },
+      include: { profile: true },
+    });
     if (!foundUser) {
       throw new ForbiddenException('user not found');
     }
