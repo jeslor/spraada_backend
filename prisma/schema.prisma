@@ -12,6 +12,12 @@ datasource db {
   provider = "postgresql"
 }
 
+enum Role{
+  USER
+  ADMIN
+  RENTER
+}
+
 
 model User {
   id           Int      @id @default(autoincrement())
@@ -19,6 +25,7 @@ model User {
   hash         String
   hashedRefreshToken String?
   isOnboarded  Boolean  @default(false)
+    role      Role   @default(USER)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   profile      Profile?
@@ -34,7 +41,6 @@ model Profile {
   coverUrl  String?
   country   String?
   city      String?
-  role      String   @default("USER")
   phone     String?
   userId    Int      @unique
   listings  Listing[]

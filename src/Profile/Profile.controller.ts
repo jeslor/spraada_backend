@@ -1,4 +1,4 @@
-import type { User } from '.prisma/client/wasm';
+import { Role, type User } from '.prisma/client/wasm';
 import {
   Body,
   Controller,
@@ -12,6 +12,7 @@ import {
 import { GetUser } from 'src/Auth/decorator/user.decorator';
 import { ProfileService } from './Profile.service';
 import { CreateProfileDto, EditProfileDto } from './dto';
+import { Roles } from 'src/Auth/decorator/roles.decorator';
 
 //Not adding the guard here, as it's already applied globally in AuthModule
 @Controller('profile')
@@ -23,6 +24,7 @@ export class ProfileController {
     return this.profileService.createProfile(user, { ...dto });
   }
 
+  @Roles(Role.USER)
   @Get('/:id')
   async getUser(@Param('id') id: number, @Req() req) {
     //get user profile using profile service
