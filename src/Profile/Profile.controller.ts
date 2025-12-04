@@ -25,11 +25,12 @@ export class ProfileController {
     return this.profileService.createProfile(user, { ...dto });
   }
 
-  @Roles('ADMIN')
+  @Roles('USER', 'ADMIN')
   @UseGuards(RoleGuardGuard)
   @Get('/:id')
   async getUser(@Param('id') id: number, @Req() req) {
     //get user profile using profile service
+    const user = req.user;
     //check if user is onboarded else return a specific error to cause frontend to redirect to onboarding
     //use auth service to get user by id
     try {

@@ -84,7 +84,9 @@ export default class AuthController {
         `access_token=${req.user.access_token}&` +
         `refresh_token=${req.user.refresh_token}&` +
         `email=${req.user.email}&` +
-        `id=${req.user.id}`,
+        `id=${req.user.id}&` +
+        `isOnboarded=${req.user.isOnboarded}&` +
+        `role=${req.user.role}`,
     );
   }
 

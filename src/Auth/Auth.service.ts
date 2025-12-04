@@ -27,6 +27,8 @@ interface signInResult {
   refresh_token: string;
   id: number;
   email: string;
+  isOnboarded: boolean;
+  role: string;
 }
 
 @Injectable()
@@ -61,6 +63,8 @@ export default class AuthService {
         refresh_token: refresh_token,
         id: foundUser.id,
         email: foundUser.email,
+        isOnboarded: !!foundUser.isOnboarded,
+        role: foundUser.role,
       };
     } catch (error) {
       throw error;
@@ -92,6 +96,8 @@ export default class AuthService {
         refresh_token: refresh_token,
         id: newUser.id,
         email: newUser.email,
+        isOnboarded: newUser.isOnboarded,
+        role: newUser.role,
       };
     } catch (error) {
       throw error;
@@ -209,6 +215,8 @@ export default class AuthService {
         refresh_token: refresh_token,
         id: userwithoutHash.id,
         email: userwithoutHash.email,
+        isOnboarded: userwithoutHash.isOnboarded,
+        role: userwithoutHash.role,
       };
     } catch (error) {
       throw error;
