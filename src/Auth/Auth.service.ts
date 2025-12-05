@@ -228,7 +228,6 @@ export default class AuthService {
   async signOut(userId: number) {
     try {
       await this.updateHashedRefreshToken(userId, null);
-      console.log('User signed out:', userId);
       return true;
     } catch (error) {
       console.error('Error signing out user:', error);
