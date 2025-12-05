@@ -11,6 +11,7 @@ import * as Argon from 'argon2';
 import refreshTokenConfig from './config/refresh-token.config.ts';
 import type { ConfigType } from '@nestjs/config';
 import { RefreshTokenDto } from './dto/refreshToken.dto';
+import { Role } from '@prisma/client';
 
 interface AuthJwtPayload {
   email: string;
@@ -245,6 +246,21 @@ export default class AuthService {
         where: { id: userId },
         data: { hashedRefreshToken },
       });
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async updateUser(userId: number, dto: { isOnboarded: boolean; role?: Role }) {
+    try {
+      const updatedUser = await this.prisma.user.update({
+        where: { id: userId },
+        data: {
+          isOnboarded: dto.isOnboarded,
+          role: dto.role,
+        },
+      });
+      return updatedUser;
     } catch (error) {
       throw error;
     }

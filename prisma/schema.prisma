@@ -25,7 +25,7 @@ model User {
   hash         String
   hashedRefreshToken String?
   isOnboarded  Boolean  @default(false)
-    role      Role   @default(USER)
+  role      Role   @default(USER)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   profile      Profile?
@@ -38,8 +38,11 @@ model Profile {
   email     String   @unique
   bio       String?
   avatarUrl String?
+  avatarUrlKey String?
   coverUrl  String?
+  coverUrlKey  String?
   country   String?
+  address   String?
   city      String?
   phone     String?
   userId    Int      @unique

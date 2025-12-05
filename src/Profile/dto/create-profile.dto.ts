@@ -1,5 +1,4 @@
 import {
-  IsEmail,
   IsNotEmpty,
   IsOptional,
   IsPhoneNumber,
@@ -15,13 +14,13 @@ export class CreateProfileDto {
   @IsNotEmpty()
   lastName: string;
 
-  @IsOptional()
+  @IsNotEmpty()
   @IsString()
-  bio?: string;
+  bio: string;
 
   @IsPhoneNumber()
-  @IsOptional()
-  phoneNumber?: string;
+  @IsNotEmpty()
+  phone: string;
 
   @IsString()
   @IsOptional()
@@ -34,4 +33,20 @@ export class CreateProfileDto {
   @IsString()
   @IsNotEmpty()
   country: string;
+
+  @IsString()
+  @IsOptional()
+  coverUrl?: string;
+
+  @IsString()
+  @IsOptional()
+  coverUrlKey?: string;
+
+  @IsString()
+  @IsNotEmpty()
+  avatarUrl: string;
+
+  @IsString()
+  @IsNotEmpty()
+  avatarUrlKey: string;
 }

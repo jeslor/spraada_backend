@@ -14,6 +14,7 @@ export class UploadService {
 
   async uploadImages(files: Express.Multer.File[]) {
     const bucket = process.env.AWS_S3_BUCKET_NAME!;
+    let result: { key: string; url: string }[] = [];
 
     // ⬇️ correct parallel uploads
     const uploadPromises = files.map(async (file) => {
@@ -35,10 +36,10 @@ export class UploadService {
     });
 
     // Wait for all parallel uploads
-    const results = await Promise.all(uploadPromises);
+    await Promise.all(uploadPromises).then((res) => {
+      result = [...res];
+    });
 
-    console.log(results);
-
-    return results;
+    return result;
   }
 }

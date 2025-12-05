@@ -8,6 +8,7 @@ import {
   HttpStatus,
   Get,
   UseGuards,
+  Param,
 } from '@nestjs/common';
 import type { Response } from 'express';
 import { SigninDto, SignupDto } from './dto';
@@ -88,6 +89,27 @@ export default class AuthController {
         `isOnboarded=${req.user.isOnboarded}&` +
         `role=${req.user.role}`,
     );
+  }
+
+  @Get(':id')
+  async getUserById(
+    @Param('id') id: string,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const userId = Number(id);
+    if (isNaN(userId)) {
+      res.status(400).json({ error: 'Invalid user ID' });
+      return;
+    }
+    const fetchedUser = await this.authService.findUserById(userId);
+    console.log('feched user', fetchedUser);
+
+    if (!fetchedUser) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+
+    return fetchedUser;
   }
 
   //Not adding the guard here, as it's already applied globally in AuthModule
