@@ -9,7 +9,7 @@ import { ProfileService } from 'src/Profile/Profile.service';
 import { StringValue } from 'ms';
 import refreshTokenConfig from './config/refresh-token.config.ts';
 import googleOathConfig from './config/googleOath.config';
-import { JwtAuthGuard, RefreshAuthGuard } from './guard';
+import { JwtAuthGuard, RefreshAuthGuard, RoleGuardGuard } from './guard';
 import { GoogleStrategy } from './strategy/google.strategy';
 
 @Module({

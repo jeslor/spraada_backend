@@ -11,6 +11,7 @@ import * as Argon from 'argon2';
 import refreshTokenConfig from './config/refresh-token.config.ts';
 import type { ConfigType } from '@nestjs/config';
 import { RefreshTokenDto } from './dto/refreshToken.dto';
+import { Role } from '@prisma/client';
 
 interface AuthJwtPayload {
   email: string;
@@ -27,6 +28,8 @@ interface signInResult {
   refresh_token: string;
   id: number;
   email: string;
+  isOnboarded: boolean;
+  role: string;
 }
 
 @Injectable()
@@ -61,6 +64,8 @@ export default class AuthService {
         refresh_token: refresh_token,
         id: foundUser.id,
         email: foundUser.email,
+        isOnboarded: !!foundUser.isOnboarded,
+        role: foundUser.role,
       };
     } catch (error) {
       throw error;
@@ -92,6 +97,8 @@ export default class AuthService {
         refresh_token: refresh_token,
         id: newUser.id,
         email: newUser.email,
+        isOnboarded: newUser.isOnboarded,
+        role: newUser.role,
       };
     } catch (error) {
       throw error;
@@ -105,7 +112,10 @@ export default class AuthService {
 
   //return user object without the hash
   async findUserById(id: number) {
-    const foundUser = await this.prisma.user.findUnique({ where: { id } });
+    const foundUser = await this.prisma.user.findUnique({
+      where: { id },
+      include: { profile: true },
+    });
     if (!foundUser) {
       throw new ForbiddenException('user not found');
     }
@@ -206,6 +216,8 @@ export default class AuthService {
         refresh_token: refresh_token,
         id: userwithoutHash.id,
         email: userwithoutHash.email,
+        isOnboarded: userwithoutHash.isOnboarded,
+        role: userwithoutHash.role,
       };
     } catch (error) {
       throw error;
@@ -216,7 +228,6 @@ export default class AuthService {
   async signOut(userId: number) {
     try {
       await this.updateHashedRefreshToken(userId, null);
-      console.log('User signed out:', userId);
       return true;
     } catch (error) {
       console.error('Error signing out user:', error);
@@ -234,6 +245,21 @@ export default class AuthService {
         where: { id: userId },
         data: { hashedRefreshToken },
       });
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async updateUser(userId: number, dto: { isOnboarded: boolean; role?: Role }) {
+    try {
+      const updatedUser = await this.prisma.user.update({
+        where: { id: userId },
+        data: {
+          isOnboarded: dto.isOnboarded,
+          role: dto.role,
+        },
+      });
+      return updatedUser;
     } catch (error) {
       throw error;
     }

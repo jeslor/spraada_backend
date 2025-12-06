@@ -1,4 +1,4 @@
-import type { User } from '.prisma/client/wasm';
+import { Profile, Role, type User } from '.prisma/client/wasm';
 import {
   Body,
   Controller,
@@ -12,6 +12,9 @@ import {
 import { GetUser } from 'src/Auth/decorator/user.decorator';
 import { ProfileService } from './Profile.service';
 import { CreateProfileDto, EditProfileDto } from './dto';
+import { Roles } from 'src/Auth/decorator/roles.decorator';
+import { RoleGuardGuard } from 'src/Auth/guard';
+import AuthService from 'src/Auth/Auth.service';
 
 //Not adding the guard here, as it's already applied globally in AuthModule
 @Controller('profile')
@@ -19,13 +22,23 @@ export class ProfileController {
   constructor(private profileService: ProfileService) {}
 
   @Post()
-  CreateProfile(@GetUser() user: User, @Body() dto: CreateProfileDto) {
-    return this.profileService.createProfile(user, { ...dto });
+  async CreateProfile(@GetUser() user: User, @Body() dto: CreateProfileDto) {
+    const createdProfile: Profile | Error =
+      await this.profileService.createProfile(user, { ...dto });
+
+    if (createdProfile instanceof Error) {
+      return { message: 'Error creating profile', createdProfile };
+    }
+
+    return createdProfile;
   }
 
+  @Roles('USER', 'ADMIN')
+  @UseGuards(RoleGuardGuard)
   @Get('/:id')
   async getUser(@Param('id') id: number, @Req() req) {
     //get user profile using profile service
+    const user = req.user;
     //check if user is onboarded else return a specific error to cause frontend to redirect to onboarding
     //use auth service to get user by id
     try {
