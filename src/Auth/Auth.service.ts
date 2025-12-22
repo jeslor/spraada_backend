@@ -114,7 +114,18 @@ export default class AuthService {
   async findUserById(id: number) {
     const foundUser = await this.prisma.user.findUnique({
       where: { id },
-      include: { profile: true },
+      include: {
+        profile: {
+          include: {
+            listings: {
+              include: {
+                photos: true,
+              },
+            },
+            bookings: true,
+          },
+        },
+      },
     });
     if (!foundUser) {
       throw new ForbiddenException('user not found');
