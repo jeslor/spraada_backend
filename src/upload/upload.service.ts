@@ -31,7 +31,7 @@ export class UploadService {
 
       return {
         key,
-        url: `https://${bucket}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`,
+        url: `https://${bucket}.s3.${process.env.AWS_S3_BUCKET_REGION}.amazonaws.com/${key}`,
       };
     });
 
