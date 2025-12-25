@@ -40,5 +40,6 @@ import { GoogleStrategy } from './strategy/google.strategy';
       useClass: JwtAuthGuard,
     },
   ],
+  exports: [AuthService],
 })
 export default class AuthModule {}

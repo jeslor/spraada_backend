@@ -38,7 +38,6 @@ export default class AuthController {
     if (!dto.email || !dto.password) {
       throw new Error('Invalid credentials');
     }
-
     return await this.authService.signIn(dto);
   }
 
@@ -101,6 +100,8 @@ export default class AuthController {
       res.status(400).json({ error: 'Invalid user ID' });
       return;
     }
+    console.log('*****************************************************');
+
     const fetchedUser = await this.authService.findUserById(userId);
 
     if (!fetchedUser) {
