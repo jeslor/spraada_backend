@@ -38,4 +38,20 @@ export class EditProfileDto {
   @IsString()
   @IsOptional()
   country?: string;
+
+  @IsString()
+  @IsOptional()
+  avatarUrl?: string;
+
+  @IsString()
+  @IsOptional()
+  avatarUrlKey?: string;
+
+  @IsString()
+  @IsOptional()
+  coverUrl?: string;
+
+  @IsString()
+  @IsOptional()
+  coverUrlKey?: string;
 }
