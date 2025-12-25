@@ -1,6 +1,6 @@
 import {
+  Body,
   Controller,
-  Delete,
   Param,
   Post,
   UploadedFiles,
@@ -22,19 +22,16 @@ export class UploadController {
     @UploadedFiles() files: Express.Multer.File[],
     @Param('userId') userId: number,
   ) {
-    console.log('the userId from the from end', files, userId);
-
     return await this.uploadService.uploadImages(files, userId);
   }
+
   @Roles('USER', 'ADMIN')
-  @Delete('deleteOldProfileOrCoverImages/:userId')
-  async delete(
-    @UploadedFiles() image: deleteUploadDto,
-    @Param('userId') userId: number,
-  ) {
-    return await this.uploadService.deleteProfileOrCoverImages(
-      image.keys,
+  @Post('deleteOldProfileOrCoverImages/:userId')
+  async delete(@Body() dto: deleteUploadDto, @Param('userId') userId: number) {
+    return await this.uploadService.deleteProfileOrCoverImages({
+      keys: dto.keys,
       userId,
-    );
+      profileId: dto.profileId,
+    });
   }
 }
