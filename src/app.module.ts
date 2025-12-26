@@ -4,6 +4,7 @@ import { ConfigModule } from '@nestjs/config';
 import PrismaModule from './prisma/prisma.module';
 import { ProfileModule } from './Profile/Profile.module';
 import { UploadModule } from './uploadResource/upload.module';
+import { ToolsModule } from './tools/tools.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { UploadModule } from './uploadResource/upload.module';
     PrismaModule,
     ProfileModule,
     UploadModule,
+    ToolsModule,
   ],
   providers: [],
 })
