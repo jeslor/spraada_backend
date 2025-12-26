@@ -100,8 +100,6 @@ export default class AuthController {
       res.status(400).json({ error: 'Invalid user ID' });
       return;
     }
-    console.log('*****************************************************');
-
     const fetchedUser = await this.authService.findUserById(userId);
 
     if (!fetchedUser) {
