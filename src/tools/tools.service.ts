@@ -1,11 +1,34 @@
 import { Injectable } from '@nestjs/common';
 import { CreateToolDto } from './dto/create-tool.dto';
 import { UpdateToolDto } from './dto/update-tool.dto';
+import PrismaService from 'src/prisma/prisma.service';
 
 @Injectable()
 export class ToolsService {
-  create(createToolDto: CreateToolDto) {
-    return 'This action adds a new tool';
+  constructor(private prisma: PrismaService) {}
+
+  async create(createToolDto: CreateToolDto) {
+    try {
+      const { toolPhotos, profileId, ...toolData } = createToolDto;
+
+      // Convert toolPhotos array to the format expected by the JSON field
+      const JsonPhotos = toolPhotos.map((photo) => ({
+        photoUrl: photo.photoUrl,
+        photoUrlKey: photo.photoKey,
+      }));
+
+      const newTool = await this.prisma.tool.create({
+        data: {
+          ...toolData,
+          profileId,
+          toolPhotos: JsonPhotos,
+        },
+      });
+
+      return newTool;
+    } catch (error) {
+      throw error;
+    }
   }
 
   findAll() {

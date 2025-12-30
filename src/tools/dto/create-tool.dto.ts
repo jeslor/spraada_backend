@@ -1,31 +1,53 @@
-import { IsNotEmpty, IsString, IsNumber } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsString,
+  IsNumber,
+  IsArray,
+  ValidateNested,
+} from 'class-validator';
+import { Type } from 'class-transformer';
+
+class ToolPhotoDto {
+  @IsString()
+  @IsNotEmpty()
+  photoUrl: string;
+
+  @IsString()
+  @IsNotEmpty()
+  photoKey: string;
+}
 
 export class CreateToolDto {
   @IsNumber()
   @IsNotEmpty()
-  ownerId: number;
+  profileId: number;
 
   @IsString()
   @IsNotEmpty()
   name: string;
+
   @IsString()
   @IsNotEmpty()
   description: string;
+
   @IsNumber()
   @IsNotEmpty()
-  deposit: number;
+  depositCents: number;
+
   @IsString()
   @IsNotEmpty()
   category: string;
+
   @IsNumber()
   @IsNotEmpty()
-  dailyRate: number;
+  dailyPriceCents: number;
+
   @IsNumber()
   @IsNotEmpty()
   replacementValue: number;
 
-  toolPhotos: {
-    url: string;
-    photoKey: string;
-  }[];
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => ToolPhotoDto)
+  toolPhotos: ToolPhotoDto[];
 }

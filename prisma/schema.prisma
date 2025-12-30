@@ -20,6 +20,7 @@ enum Role{
 }
 
 
+
 model User {
   id           Int      @id @default(autoincrement())
   email        String   @unique
@@ -58,9 +59,9 @@ model Profile {
 
 model Booking {
  id String @id @default(cuid())
- userId Int
- profile Profile @relation(fields: [userId], references: [id])
- listingId String
+ profileId Int
+ profile Profile @relation(fields: [profileId], references: [id])
+ toolId String
  renterId String
  start DateTime
  end DateTime
@@ -79,9 +80,9 @@ model Tool{
   available Boolean @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  userId      Int
-  profile     Profile   @relation("OwnedTools", fields: [userId], references: [id])
+  profileId   Int
+  profile     Profile   @relation("OwnedTools", fields: [profileId], references: [id])
   rentedBy    Profile[] @relation("RentedTools")
   borrowedBy  Profile[] @relation("BorrowedTools")
-  photos      Json      @default("[]") // Array of {url: string, urlKey: string}
+  toolPhotos      Json      @default("[]") // Array of {url: string, urlKey: string}
 }

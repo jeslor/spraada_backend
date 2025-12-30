@@ -117,11 +117,7 @@ export default class AuthService {
       include: {
         profile: {
           include: {
-            listings: {
-              include: {
-                photos: true,
-              },
-            },
+            myToolBox: true,
             bookings: true,
           },
         },
