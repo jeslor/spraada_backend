@@ -22,7 +22,11 @@ export class UploadService {
     },
   });
 
-  async uploadImages(files: Express.Multer.File[], userId: number) {
+  async uploadImages(
+    files: Express.Multer.File[],
+    userId: number,
+    folderSection = 'tool-images',
+  ) {
     const userExists = await this.authService.findUserById(userId); // Assume this function is defined elsewhere
     if (!userExists) {
       throw new Error('You are not authorized to upload images');
@@ -32,7 +36,7 @@ export class UploadService {
 
     // ⬇️ correct parallel uploads
     const uploadPromises = files.map(async (file) => {
-      const key = `profile-images/${uuidV4()}-${file.originalname}`;
+      const key = `${folderSection}/${uuidV4()}-${file.originalname}`;
 
       await this.s3.send(
         new PutObjectCommand({
