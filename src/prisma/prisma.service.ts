@@ -19,7 +19,7 @@ export default class PrismaService extends PrismaClient {
     await this.$transaction([
       this.user.deleteMany(),
       this.profile.deleteMany(),
-      this.listing.deleteMany(),
+      this.tool.deleteMany(),
       this.booking.deleteMany(),
 
       // Add other models as needed
