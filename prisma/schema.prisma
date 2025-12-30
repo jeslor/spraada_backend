@@ -47,31 +47,15 @@ model Profile {
   city      String?
   phone     String?
   userId    Int      @unique
-  listings  Listing[]
-  bookings  Booking[]
+  myToolBox         Tool[]   @relation("OwnedTools")
+  rentedTools   Tool[]   @relation("RentedTools")
+  borrowedTools Tool[]   @relation("BorrowedTools")
+  bookings      Booking[]
   user      User     @relation(fields: [userId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
-model Listing {
- id String @id @default(cuid())
- ownerId String
- title String
- description String
- dailyPriceCents Int
- userId Int
- profile Profile @relation(fields: [userId], references: [id])
- depositCents Int
- replacementValue Int
- lat Float
- lng Float
-  address String
-  city String
-  country String
-  photos Photo[]
- createdAt DateTime @default(now())
-}
 model Booking {
  id String @id @default(cuid())
  userId Int
@@ -82,14 +66,6 @@ model Booking {
  end DateTime
  totalCents Int
  status String
-}
-
-model Photo {
- id String @id @default(cuid())
- photoKey String
- url String
- listingId String
- listing Listing @relation(fields: [listingId], references: [id])
 }
 
 model Tool{
@@ -103,4 +79,9 @@ model Tool{
   available Boolean @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  userId      Int
+  profile     Profile   @relation("OwnedTools", fields: [userId], references: [id])
+  rentedBy    Profile[] @relation("RentedTools")
+  borrowedBy  Profile[] @relation("BorrowedTools")
+  photos      Json      @default("[]") // Array of {url: string, urlKey: string}
 }

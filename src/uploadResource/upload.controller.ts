@@ -3,6 +3,7 @@ import {
   Controller,
   Param,
   Post,
+  Query,
   UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common';
@@ -21,8 +22,9 @@ export class UploadController {
   async create(
     @UploadedFiles() files: Express.Multer.File[],
     @Param('userId') userId: number,
+    @Query('resourceFolder') folderSection: string,
   ) {
-    return await this.uploadService.uploadImages(files, userId);
+    return await this.uploadService.uploadImages(files, userId, folderSection);
   }
 
   @Roles('USER', 'ADMIN')
