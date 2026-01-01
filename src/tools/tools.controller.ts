@@ -22,8 +22,8 @@ export class ToolsController {
   }
 
   @Get('owner/:ownerId')
-  async findByOwner(@Param('ownerId') ownerId: number) {
-    return await this.toolsService.findByOwner(ownerId);
+  async findUserTools(@Param('ownerId') ownerId: number) {
+    return await this.toolsService.findUserTools(ownerId);
   }
 
   @Get()
@@ -33,16 +33,16 @@ export class ToolsController {
 
   @Get(':id')
   async findOne(@Param('id') id: string) {
-    return await this.toolsService.findOne(+id);
+    return await this.toolsService.findOne(id);
   }
 
   @Patch(':id')
   async update(@Param('id') id: string, @Body() updateToolDto: UpdateToolDto) {
-    return await this.toolsService.update(+id, updateToolDto);
+    return await this.toolsService.update(id, updateToolDto);
   }
 
   @Delete(':id')
   async remove(@Param('id') id: string) {
-    return await this.toolsService.remove(+id);
+    return await this.toolsService.remove(id);
   }
 }
