@@ -35,6 +35,15 @@ export class ToolsService {
     return `This action returns all tools`;
   }
 
+  async findByOwner(ownerId: number) {
+    const tools = await this.prisma.tool.findMany({
+      where: {
+        profileId: ownerId,
+      },
+    });
+    return tools;
+  }
+
   findOne(id: number) {
     return `This action returns a #${id} tool`;
   }

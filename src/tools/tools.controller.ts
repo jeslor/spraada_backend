@@ -10,6 +10,7 @@ import {
 import { ToolsService } from './tools.service';
 import { CreateToolDto } from './dto/create-tool.dto';
 import { UpdateToolDto } from './dto/update-tool.dto';
+import { Roles } from 'src/Auth/decorator/roles.decorator';
 
 @Controller('tools')
 export class ToolsController {
@@ -18,6 +19,11 @@ export class ToolsController {
   @Post()
   async create(@Body() createToolDto: CreateToolDto) {
     return await this.toolsService.create(createToolDto);
+  }
+
+  @Get('owner/:ownerId')
+  async findByOwner(@Param('ownerId') ownerId: number) {
+    return await this.toolsService.findByOwner(ownerId);
   }
 
   @Get()
