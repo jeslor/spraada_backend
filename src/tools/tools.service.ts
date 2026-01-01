@@ -35,24 +35,64 @@ export class ToolsService {
     return `This action returns all tools`;
   }
 
-  async findByOwner(ownerId: number) {
+  async findUserTools(userId: number) {
     const tools = await this.prisma.tool.findMany({
       where: {
-        profileId: ownerId,
+        profileId: userId,
       },
     });
     return tools;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} tool`;
+  async findOne(id: string) {
+    const tool = await this.prisma.tool.findUnique({
+      where: { id },
+      include: {
+        profile: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            avatarUrl: true,
+            city: true,
+            country: true,
+          },
+        },
+      },
+    });
+    return tool;
   }
 
-  update(id: number, updateToolDto: UpdateToolDto) {
-    return `This action updates a #${id} tool`;
+  async update(id: string, updateToolDto: UpdateToolDto) {
+    try {
+      const { toolPhotos, profileId, ...toolData } = updateToolDto;
+
+      // Build the update data
+      const updateData: any = { ...toolData };
+
+      // If toolPhotos are provided, convert them to the expected format
+      if (toolPhotos && toolPhotos.length > 0) {
+        updateData.toolPhotos = toolPhotos.map((photo) => ({
+          photoUrl: photo.photoUrl,
+          photoUrlKey: photo.photoKey,
+        }));
+      }
+
+      const updatedTool = await this.prisma.tool.update({
+        where: { id },
+        data: updateData,
+      });
+
+      return updatedTool;
+    } catch (error) {
+      throw error;
+    }
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} tool`;
+  async remove(id: string) {
+    const deletedTool = await this.prisma.tool.delete({
+      where: { id },
+    });
+    return deletedTool;
   }
 }
