@@ -1,4 +1,5 @@
-import { Profile, Role, type User } from '.prisma/client/wasm';
+import { Profile, Role } from '@prisma/client';
+import type { User } from '@prisma/client';
 import {
   Body,
   Controller,
@@ -14,7 +15,6 @@ import { ProfileService } from './Profile.service';
 import { CreateProfileDto, EditProfileDto } from './dto';
 import { Roles } from 'src/Auth/decorator/roles.decorator';
 import { RoleGuardGuard } from 'src/Auth/guard';
-import AuthService from 'src/Auth/Auth.service';
 
 //Not adding the guard here, as it's already applied globally in AuthModule
 @Controller('profile')
