@@ -14,7 +14,7 @@ class ToolPhotoDto {
 
   @IsString()
   @IsNotEmpty()
-  photoKey: string;
+  photoUrlKey: string;
 }
 
 export class CreateToolDto {
