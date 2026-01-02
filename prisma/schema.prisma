@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,76 +7,76 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Role{
-  USER
-  ADMIN
-  RENTER
-}
-
-
-
 model User {
-  id           Int      @id @default(autoincrement())
-  email        String   @unique
-  hash         String
+  id                 Int      @id @default(autoincrement())
+  email              String   @unique
+  hash               String
   hashedRefreshToken String?
-  isOnboarded  Boolean  @default(false)
-  role      Role   @default(USER)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  profile      Profile?
+  isOnboarded        Boolean  @default(false)
+  role               Role     @default(USER)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  profile            Profile?
 }
 
 model Profile {
-  id        Int      @id @default(autoincrement())
-  firstName String
-  lastName  String
-  email     String   @unique
-  bio       String?
-  avatarUrl String?
-  avatarUrlKey String?
-  coverUrl  String?
-  coverUrlKey  String?
-  country   String?
-  address   String?
-  city      String?
-  phone     String?
-  userId    Int      @unique
-  myToolBox         Tool[]   @relation("OwnedTools")
-  rentedTools   Tool[]   @relation("RentedTools")
-  borrowedTools Tool[]   @relation("BorrowedTools")
+  id            Int       @id @default(autoincrement())
+  firstName     String
+  lastName      String
+  email         String    @unique
+  bio           String?
+  avatarUrl     String?
+  avatarUrlKey  String?
+  coverUrl      String?
+  coverUrlKey   String?
+  country       String?
+  address       String?
+  city          String?
+  phone         String?
+  userId        Int       @unique
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
   bookings      Booking[]
-  user      User     @relation(fields: [userId], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  user          User      @relation(fields: [userId], references: [id])
+  myToolBox     Tool[]    @relation("OwnedTools")
+  favoriteTools Tool[]    @relation("FavoriteTools")
+  borrowedTools Tool[]    @relation("BorrowedTools")
+  rentedTools   Tool[]    @relation("RentedTools")
 }
 
 model Booking {
- id String @id @default(cuid())
- profileId Int
- profile Profile @relation(fields: [profileId], references: [id])
- toolId String
- renterId String
- start DateTime
- end DateTime
- totalCents Int
- status String
+  id         String   @id @default(cuid())
+  profileId  Int
+  toolId     String
+  renterId   String
+  start      DateTime
+  end        DateTime
+  totalCents Int
+  status     String
+  profile    Profile  @relation(fields: [profileId], references: [id])
 }
 
-model Tool{
-  id String @id @default(cuid())
-  name String
-  description String
-  category String
-  dailyPriceCents Int
-  depositCents Int
+model Tool {
+  id               String    @id @default(cuid())
+  name             String
+  description      String
+  category         String
+  dailyPriceCents  Int
+  depositCents     Int
   replacementValue Int
-  available Boolean @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  profileId   Int
-  profile     Profile   @relation("OwnedTools", fields: [profileId], references: [id])
-  rentedBy    Profile[] @relation("RentedTools")
-  borrowedBy  Profile[] @relation("BorrowedTools")
-  toolPhotos      Json      @default("[]") // Array of {url: string, urlKey: string}
+  available        Boolean   @default(true)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  profileId        Int
+  toolPhotos       Json      @default("[]")
+  profile          Profile   @relation("OwnedTools", fields: [profileId], references: [id])
+  favoritedBy      Profile[] @relation("FavoriteTools")
+  borrowedBy       Profile[] @relation("BorrowedTools")
+  rentedBy         Profile[] @relation("RentedTools")
+}
+
+enum Role {
+  USER
+  ADMIN
+  RENTER
 }
