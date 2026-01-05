@@ -353,6 +353,51 @@ export default class AuthService {
     }
   }
 
+  //save new password after validating the reset token, clear the reset token fields
+  async saveNewPassword(
+    token: string,
+    email: string,
+    newPassword: string,
+  ): Promise<{ success: boolean; data: string }> {
+    try {
+      if (!newPassword || newPassword.length < 8) {
+        throw new ForbiddenException('Password does not meet requirements');
+      }
+
+      const user = await this.findUserByEmail(email);
+      if (!user) {
+        throw new ForbiddenException('No user found with this email');
+      }
+      if (
+        !user.hashedResetToken ||
+        user.hashedResetToken !== token ||
+        !user.resetPasswordTokenExpiry
+      ) {
+        throw new ForbiddenException('Invalid or expired reset token');
+      }
+      const currentTime = new Date();
+      if (currentTime > user.resetPasswordTokenExpiry) {
+        throw new ForbiddenException('Reset token has expired');
+      }
+
+      const hashedNewPassword = await Argon.hash(newPassword);
+      await this.prisma.user.update({
+        where: { email },
+        data: {
+          hash: hashedNewPassword,
+          // Clear reset token fields
+          hashedResetToken: null,
+          hashedResetPasswordToken: null,
+          resetPasswordTokenExpiry: null,
+        },
+      });
+
+      return { success: true, data: 'Password updated successfully' };
+    } catch (error) {
+      throw error;
+    }
+  }
+
   //sign out user by clearing the hashed refresh token
   async signOut(userId: number) {
     try {
