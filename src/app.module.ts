@@ -5,6 +5,7 @@ import PrismaModule from './prisma/prisma.module';
 import { ProfileModule } from './Profile/Profile.module';
 import { UploadModule } from './uploadResource/upload.module';
 import { ToolsModule } from './tools/tools.module';
+import { EmailModule } from './email/email.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { ToolsModule } from './tools/tools.module';
     ProfileModule,
     UploadModule,
     ToolsModule,
+    EmailModule,
   ],
   providers: [],
 })

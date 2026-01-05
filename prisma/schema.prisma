@@ -12,6 +12,9 @@ model User {
   email              String   @unique
   hash               String
   hashedRefreshToken String?
+  hashedResetPasswordToken String?
+  resetPasswordTokenExpiry   DateTime?
+  hashedResetToken          String?
   isOnboarded        Boolean  @default(false)
   role               Role     @default(USER)
   createdAt          DateTime @default(now())

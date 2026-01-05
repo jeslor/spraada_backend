@@ -11,10 +11,12 @@ import refreshTokenConfig from './config/refresh-token.config.ts';
 import googleOathConfig from './config/googleOath.config';
 import { JwtAuthGuard, RefreshAuthGuard, RoleGuardGuard } from './guard';
 import { GoogleStrategy } from './strategy/google.strategy';
+import { EmailModule } from 'src/email/email.module';
 
 @Module({
   imports: [
     PassportModule,
+    EmailModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({

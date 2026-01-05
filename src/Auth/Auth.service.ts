@@ -11,7 +11,9 @@ import * as Argon from 'argon2';
 import refreshTokenConfig from './config/refresh-token.config.ts';
 import type { ConfigType } from '@nestjs/config';
 import { RefreshTokenDto } from './dto/refreshToken.dto';
+import { nanoid } from 'nanoid';
 import { Role } from '@prisma/client';
+import { EmailService } from 'src/email/email.service';
 
 interface AuthJwtPayload {
   email: string;
@@ -32,11 +34,18 @@ interface signInResult {
   role: string;
 }
 
+interface GeneratePasswordResetResult {
+  hashedResetToken: string;
+  hashedResetPasswordToken: string;
+  resetPasswordTokenExpiry: Date;
+}
+
 @Injectable()
 export default class AuthService {
   constructor(
     private prisma: PrismaService,
     private jwt: JwtService,
+    private emailService: EmailService,
     @Inject(refreshTokenConfig.KEY)
     private readonly refreshTokenConfiguration: ConfigType<
       typeof refreshTokenConfig
@@ -107,27 +116,36 @@ export default class AuthService {
 
   //return full user object with the hash
   async findUserByEmail(email: string) {
-    return this.prisma.user.findUnique({ where: { email } });
+    try {
+      const emailUser = this.prisma.user.findUnique({ where: { email } });
+      return emailUser;
+    } catch (error) {
+      throw error;
+    }
   }
 
   //return user object without the hash
   async findUserById(id: number) {
-    const foundUser = await this.prisma.user.findUnique({
-      where: { id },
-      include: {
-        profile: {
-          include: {
-            myToolBox: true,
-            bookings: true,
+    try {
+      const foundUser = await this.prisma.user.findUnique({
+        where: { id },
+        include: {
+          profile: {
+            include: {
+              myToolBox: true,
+              bookings: true,
+            },
           },
         },
-      },
-    });
-    if (!foundUser) {
-      throw new ForbiddenException('user not found');
+      });
+      if (!foundUser) {
+        throw new ForbiddenException('user not found');
+      }
+      const { hash, ...userwithoutHash } = foundUser;
+      return userwithoutHash;
+    } catch (error) {
+      throw error;
     }
-    const { hash, ...userwithoutHash } = foundUser;
-    return userwithoutHash;
   }
 
   //create a refresh token
@@ -225,6 +243,77 @@ export default class AuthService {
         email: userwithoutHash.email,
         isOnboarded: userwithoutHash.isOnboarded,
         role: userwithoutHash.role,
+      };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async generatePasswordResetToken(): Promise<GeneratePasswordResetResult> {
+    try {
+      // Random token to be sent to user email for verification
+      const hashedResetToken = nanoid(64);
+
+      // Random token stored in the database (hashed) for verification
+      const hashedResetPasswordToken = await Argon.hash(hashedResetToken, {
+        type: Argon.argon2id,
+      });
+      const tokenExpiry = new Date(Date.now() + 20 * 60 * 1000); // Token valid for 20 minutes
+      const resetPasswordTokenExpiry = tokenExpiry;
+      return {
+        hashedResetToken,
+        hashedResetPasswordToken,
+        resetPasswordTokenExpiry,
+      };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  //initiate password reset by generating a reset token, an emailToken and storing it in the database
+  async initiatePasswordReset(
+    email: string,
+  ): Promise<{ hashedResetToken: string } | void> {
+    try {
+      const user = await this.findUserByEmail(email);
+      if (!user) {
+        throw new ForbiddenException('No user found with this email');
+      }
+      //Generate the tokens
+      const {
+        hashedResetPasswordToken,
+        resetPasswordTokenExpiry,
+        hashedResetToken,
+      } = await this.generatePasswordResetToken();
+
+      console.log(
+        'reached here',
+        user,
+        hashedResetToken,
+        hashedResetPasswordToken,
+        resetPasswordTokenExpiry,
+      );
+
+      //Update user with the tokens
+      await this.prisma.user.update({
+        where: { email },
+        data: {
+          hashedResetPasswordToken,
+          resetPasswordTokenExpiry,
+          hashedResetToken,
+        },
+      });
+
+      //send an email to the user with the reset token (handled in controller)
+      const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${hashedResetToken}&email=${email}`;
+      const emailSent = await this.emailService.sendPasswordResetEmail(
+        email,
+        resetLink,
+      );
+      console.log(emailSent);
+
+      return {
+        hashedResetToken,
       };
     } catch (error) {
       throw error;
