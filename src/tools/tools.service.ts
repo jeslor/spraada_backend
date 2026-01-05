@@ -14,7 +14,7 @@ export class ToolsService {
       // Convert toolPhotos array to the format expected by the JSON field
       const JsonPhotos = toolPhotos.map((photo) => ({
         photoUrl: photo.photoUrl,
-        photoUrlKey: photo.photoKey,
+        photoUrlKey: photo.photoUrlKey,
       }));
 
       const newTool = await this.prisma.tool.create({
@@ -74,7 +74,7 @@ export class ToolsService {
       if (toolPhotos && toolPhotos.length > 0) {
         updateData.toolPhotos = toolPhotos.map((photo) => ({
           photoUrl: photo.photoUrl,
-          photoUrlKey: photo.photoKey,
+          photoUrlKey: photo.photoUrlKey,
         }));
       }
 

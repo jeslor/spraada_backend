@@ -15,6 +15,7 @@ import { ProfileService } from './Profile.service';
 import { CreateProfileDto, EditProfileDto } from './dto';
 import { Roles } from 'src/Auth/decorator/roles.decorator';
 import { RoleGuardGuard } from 'src/Auth/guard';
+import { ProfileOwnerGuard } from './Guard/profile-owner.guard';
 
 //Not adding the guard here, as it's already applied globally in AuthModule
 @Controller('profile')
@@ -51,6 +52,8 @@ export class ProfileController {
       return { message: 'Error fetching user', error };
     }
   }
+
+  @UseGuards(ProfileOwnerGuard)
   @Patch('/:id')
   async updateUser(
     @GetUser() user: User,

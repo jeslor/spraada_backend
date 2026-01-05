@@ -90,6 +90,34 @@ export default class AuthController {
     );
   }
 
+  @isPublicEndpoint()
+  @Post('check-email')
+  async checkEmailExists(@Req() req, @Body('email') email: string) {
+    return await this.authService.findUserByEmail(email);
+  }
+
+  @isPublicEndpoint()
+  @Post('reset-password-request')
+  async resetPasswordRequest(@Body('email') email: string) {
+    return await this.authService.initiatePasswordReset(email);
+  }
+
+  @isPublicEndpoint()
+  @Post('check-reset-token-exists')
+  async checkResetTokenExists(@Body() body: { token: string; email: string }) {
+    return await this.authService.checkUserWithTokenExists(
+      body.token,
+      body.email,
+    );
+  }
+
+  @isPublicEndpoint()
+  @Post('check-reset-token-expired')
+  async resetPassword(@Body() body: { token: string; email: string }) {
+    return await this.authService.isResetTokenExpired(body.token, body.email);
+  }
+
+  @isPublicEndpoint()
   @Get(':id')
   async getUserById(
     @Param('id') id: string,

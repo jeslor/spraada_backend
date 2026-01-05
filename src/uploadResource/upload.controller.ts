@@ -12,12 +12,12 @@ import { UploadService } from './upload.service';
 import { deleteUploadDto } from './dto/deleteUpload.dto';
 import { Roles } from 'src/Auth/decorator/roles.decorator';
 
-@Controller('upload')
+@Controller('resources')
 export class UploadController {
   constructor(private readonly uploadService: UploadService) {}
 
   @Roles('USER', 'ADMIN')
-  @Post('resources/:userId')
+  @Post('upload/:userId')
   @UseInterceptors(FilesInterceptor('images'))
   async create(
     @UploadedFiles() files: Express.Multer.File[],
@@ -28,7 +28,7 @@ export class UploadController {
   }
 
   @Roles('USER', 'ADMIN')
-  @Post('deleteOldProfileOrCoverImages/:userId')
+  @Post('delete/:userId')
   async delete(@Body() dto: deleteUploadDto, @Param('userId') userId: number) {
     return await this.uploadService.deleteProfileOrCoverImages({
       keys: dto.keys,

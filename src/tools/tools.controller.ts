@@ -6,11 +6,12 @@ import {
   Patch,
   Param,
   Delete,
+  UseGuards,
 } from '@nestjs/common';
 import { ToolsService } from './tools.service';
 import { CreateToolDto } from './dto/create-tool.dto';
 import { UpdateToolDto } from './dto/update-tool.dto';
-import { Roles } from 'src/Auth/decorator/roles.decorator';
+import { ToolOwnerGuard } from './Guard/tool-owner.guard';
 
 @Controller('tools')
 export class ToolsController {
@@ -36,11 +37,13 @@ export class ToolsController {
     return await this.toolsService.findOne(id);
   }
 
+  @UseGuards(ToolOwnerGuard)
   @Patch(':id')
   async update(@Param('id') id: string, @Body() updateToolDto: UpdateToolDto) {
     return await this.toolsService.update(id, updateToolDto);
   }
 
+  @UseGuards(ToolOwnerGuard)
   @Delete(':id')
   async remove(@Param('id') id: string) {
     return await this.toolsService.remove(id);
