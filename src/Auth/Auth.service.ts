@@ -286,14 +286,6 @@ export default class AuthService {
         hashedResetToken,
       } = await this.generatePasswordResetToken();
 
-      console.log(
-        'reached here',
-        user,
-        hashedResetToken,
-        hashedResetPasswordToken,
-        resetPasswordTokenExpiry,
-      );
-
       //Update user with the tokens
       await this.prisma.user.update({
         where: { email },
@@ -305,16 +297,57 @@ export default class AuthService {
       });
 
       //send an email to the user with the reset token (handled in controller)
-      const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${hashedResetToken}&email=${email}`;
+      const resetLink = `${process.env.FRONTEND_URL}/reset_password?token=${hashedResetToken}&email=${email}`;
       const emailSent = await this.emailService.sendPasswordResetEmail(
         email,
         resetLink,
       );
-      console.log(emailSent);
+      if (emailSent && emailSent.accepted.length > 0) {
+        return {
+          hashedResetToken,
+        };
+      }
+      throw new Error('Failed to send password reset email');
+    } catch (error) {
+      throw error;
+    }
+  }
 
-      return {
-        hashedResetToken,
-      };
+  //check if user with the reset token exists
+  async checkUserWithTokenExists(token: string, email: string) {
+    try {
+      const user = await this.findUserByEmail(email);
+      if (!user) {
+        throw new ForbiddenException('No user found with this email');
+      }
+      if (!user.hashedResetToken || user.hashedResetToken !== token) {
+        throw new ForbiddenException('Invalid or expired reset token');
+      }
+      return { exists: true };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  //check if the reset token is expired
+  async isResetTokenExpired(token: string, email: string) {
+    try {
+      const user = await this.findUserByEmail(email);
+      if (!user) {
+        throw new ForbiddenException('No user found with this email');
+      }
+      if (
+        !user.hashedResetToken ||
+        user.hashedResetToken !== token ||
+        !user.resetPasswordTokenExpiry
+      ) {
+        throw new ForbiddenException('Invalid or expired reset token');
+      }
+      const currentTime = new Date();
+      if (currentTime > user.resetPasswordTokenExpiry) {
+        return { valid: false };
+      }
+      return { valid: true };
     } catch (error) {
       throw error;
     }
