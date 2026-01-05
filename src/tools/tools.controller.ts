@@ -45,7 +45,7 @@ export class ToolsController {
 
   @UseGuards(ToolOwnerGuard)
   @Delete(':id')
-  async remove(@Param('id') id: string) {
-    return await this.toolsService.remove(id);
+  async remove(@Param('id') id: string, @Body() body: { profileId: number }) {
+    return await this.toolsService.deleteTool(id, body.profileId);
   }
 }

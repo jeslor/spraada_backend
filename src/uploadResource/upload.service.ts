@@ -61,7 +61,7 @@ export class UploadService {
     return result;
   }
 
-  async deleteProfileOrCoverImages({
+  async deleteResources({
     keys,
     userId,
     profileId,
