@@ -27,38 +27,42 @@ export class UploadService {
     userId: number,
     folderSection = 'tool-images',
   ) {
-    const userExists = await this.authService.findUserById(userId); // Assume this function is defined elsewhere
-    if (!userExists) {
-      throw new Error('You are not authorized to upload images');
+    try {
+      const userExists = await this.authService.findUserById(userId); // Assume this function is defined elsewhere
+      if (!userExists) {
+        throw new Error('You are not authorized to upload images');
+      }
+      const bucket = process.env.AWS_S3_BUCKET_NAME!;
+      let result: { key: string; url: string }[] = [];
+
+      // ⬇️ correct parallel uploads
+      const uploadPromises = files.map(async (file) => {
+        const key = `${folderSection}/${uuidV4()}-${file.originalname}`;
+
+        await this.s3.send(
+          new PutObjectCommand({
+            Bucket: bucket,
+            Key: key,
+            Body: file.buffer,
+            ContentType: file.mimetype,
+          }),
+        );
+
+        return {
+          key,
+          url: `https://${bucket}.s3.${process.env.AWS_S3_BUCKET_REGION}.amazonaws.com/${key}`,
+        };
+      });
+
+      // Wait for all parallel uploads
+      await Promise.all(uploadPromises).then((res) => {
+        result = [...res];
+      });
+
+      return result;
+    } catch (error) {
+      throw new Error(`Failed to upload images: ${(error as Error).message}`);
     }
-    const bucket = process.env.AWS_S3_BUCKET_NAME!;
-    let result: { key: string; url: string }[] = [];
-
-    // ⬇️ correct parallel uploads
-    const uploadPromises = files.map(async (file) => {
-      const key = `${folderSection}/${uuidV4()}-${file.originalname}`;
-
-      await this.s3.send(
-        new PutObjectCommand({
-          Bucket: bucket,
-          Key: key,
-          Body: file.buffer,
-          ContentType: file.mimetype,
-        }),
-      );
-
-      return {
-        key,
-        url: `https://${bucket}.s3.${process.env.AWS_S3_BUCKET_REGION}.amazonaws.com/${key}`,
-      };
-    });
-
-    // Wait for all parallel uploads
-    await Promise.all(uploadPromises).then((res) => {
-      result = [...res];
-    });
-
-    return result;
   }
 
   async deleteResources({
