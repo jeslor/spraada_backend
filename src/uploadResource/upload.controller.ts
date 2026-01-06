@@ -30,7 +30,7 @@ export class UploadController {
   @Roles('USER', 'ADMIN')
   @Post('delete/:userId')
   async delete(@Body() dto: deleteUploadDto, @Param('userId') userId: number) {
-    return await this.uploadService.deleteProfileOrCoverImages({
+    return await this.uploadService.deleteResources({
       keys: dto.keys,
       userId,
       profileId: dto.profileId,

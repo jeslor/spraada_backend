@@ -118,6 +118,18 @@ export default class AuthController {
   }
 
   @isPublicEndpoint()
+  @Post('save-new-password')
+  async saveNewPassword(
+    @Body() body: { token: string; email: string; newPassword: string },
+  ) {
+    return await this.authService.saveNewPassword(
+      body.token,
+      body.email,
+      body.newPassword,
+    );
+  }
+
+  @isPublicEndpoint()
   @Get(':id')
   async getUserById(
     @Param('id') id: string,

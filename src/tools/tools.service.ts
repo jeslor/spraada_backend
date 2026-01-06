@@ -2,10 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { CreateToolDto } from './dto/create-tool.dto';
 import { UpdateToolDto } from './dto/update-tool.dto';
 import PrismaService from 'src/prisma/prisma.service';
+import { UploadService } from 'src/uploadResource/upload.service';
 
 @Injectable()
 export class ToolsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private uploadService: UploadService,
+  ) {}
 
   async create(createToolDto: CreateToolDto) {
     try {
@@ -89,10 +93,43 @@ export class ToolsService {
     }
   }
 
-  async remove(id: string) {
-    const deletedTool = await this.prisma.tool.delete({
-      where: { id },
-    });
-    return deletedTool;
+  async deleteTool(id: string, profileId: number) {
+    try {
+      const isToolOwner = await this.prisma.tool.findFirst({
+        where: {
+          id,
+          profileId,
+        },
+      });
+
+      if (!isToolOwner) {
+        throw new Error('You do not have permission to delete this tool');
+      }
+
+      //delete the tool images from S3 here before deleting the tool record
+      if (isToolOwner.toolPhotos && Array.isArray(isToolOwner.toolPhotos)) {
+        const photos = Array.isArray(isToolOwner.toolPhotos)
+          ? isToolOwner.toolPhotos
+          : JSON.parse(isToolOwner.toolPhotos);
+
+        const removeRemoveToolImagesFromS3 =
+          await this.uploadService.deleteResources({
+            keys: photos.map((photo) => photo.photoUrlKey),
+            userId: profileId,
+            profileId: profileId,
+          });
+
+        if (!removeRemoveToolImagesFromS3) {
+          throw new Error('Failed to delete tool images from storage');
+        }
+      }
+
+      const deletedTool = await this.prisma.tool.delete({
+        where: { id },
+      });
+      return deletedTool;
+    } catch (error) {
+      throw error;
+    }
   }
 }

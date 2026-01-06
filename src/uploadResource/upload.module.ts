@@ -8,5 +8,6 @@ import AuthModule from 'src/Auth/Auth.module';
   imports: [AuthModule],
   controllers: [UploadController],
   providers: [UploadService, ProfileService],
+  exports: [UploadService],
 })
 export class UploadModule {}
