@@ -4,6 +4,15 @@ import { UpdateToolDto } from './dto/update-tool.dto';
 import PrismaService from 'src/prisma/prisma.service';
 import { UploadService } from 'src/uploadResource/upload.service';
 
+interface whereType {
+  OR?: (
+    | { name: { contains: string; mode: 'insensitive' } }
+    | { description: { contains: string; mode: 'insensitive' } }
+  )[];
+  category?: string;
+  available?: boolean;
+}
+
 @Injectable()
 export class ToolsService {
   constructor(
@@ -37,6 +46,102 @@ export class ToolsService {
 
   findAll() {
     return `This action returns all tools`;
+  }
+
+  async searchTools({
+    searchTerm,
+    category,
+    sortBy = 'newest',
+    availability = 'all',
+    page = 1,
+    limit = 12,
+  }: {
+    searchTerm?: string;
+    category?: string;
+    sortBy?: string;
+    availability?: string;
+    page?: number;
+    limit?: number;
+  }) {
+    try {
+      const skip = (page - 1) * limit;
+
+      const where: whereType = {};
+
+      // Search by name or description
+      if (searchTerm) {
+        where.OR = [
+          { name: { contains: searchTerm, mode: 'insensitive' } },
+          { description: { contains: searchTerm, mode: 'insensitive' } },
+        ];
+      }
+
+      // Filter by category
+      if (category) {
+        where.category = category;
+      }
+
+      // Filter by availability
+      if (availability === 'available') {
+        where.available = true;
+      } else if (availability === 'unavailable') {
+        where.available = false;
+      }
+
+      // Determine sort order
+      let orderBy: any = { createdAt: 'desc' };
+      switch (sortBy) {
+        case 'price-low':
+          orderBy = { dailyPriceCents: 'asc' };
+          break;
+        case 'price-high':
+          orderBy = { dailyPriceCents: 'desc' };
+          break;
+        case 'popular':
+          // For now, sort by createdAt - can be updated when ratings/views are added
+          orderBy = { createdAt: 'desc' };
+          break;
+        case 'newest':
+        default:
+          orderBy = { createdAt: 'desc' };
+          break;
+      }
+
+      // Get total count for pagination
+      const totalCount = await this.prisma.tool.count({ where });
+
+      // Get tools
+      const tools = await this.prisma.tool.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy,
+        include: {
+          profile: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              avatarUrl: true,
+              city: true,
+            },
+          },
+        },
+      });
+
+      return {
+        data: tools,
+        pagination: {
+          page,
+          limit,
+          total: totalCount,
+          totalPages: Math.ceil(totalCount / limit),
+          hasMore: page * limit < totalCount,
+        },
+      };
+    } catch (error) {
+      throw error;
+    }
   }
 
   async findUserTools(userId: number) {
@@ -130,6 +235,34 @@ export class ToolsService {
       return deletedTool;
     } catch (error) {
       throw error;
+    }
+  }
+
+  async getRandomTools({ count }: { count: number }) {
+    try {
+      const TAKE = 12;
+
+      const totalCount = await this.prisma.tool.count();
+
+      if (totalCount === 0) return [];
+
+      const skip = Math.floor(Math.random() * Math.max(0, totalCount - TAKE));
+
+      const foundTools = await this.prisma.tool.findMany({
+        skip: skip,
+        take: TAKE,
+      });
+      console.log(foundTools);
+
+      return {
+        message: 'Random tools fetched successfully',
+        data: foundTools,
+      };
+    } catch (error) {
+      return {
+        message: 'Failed to fetch random tools',
+        data: [],
+      };
     }
   }
 }
