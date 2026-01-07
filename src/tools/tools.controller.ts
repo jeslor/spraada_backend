@@ -7,11 +7,13 @@ import {
   Param,
   Delete,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { ToolsService } from './tools.service';
 import { CreateToolDto } from './dto/create-tool.dto';
 import { UpdateToolDto } from './dto/update-tool.dto';
 import { ToolOwnerGuard } from './Guard/tool-owner.guard';
+import { isPublicEndpoint } from 'src/Auth/decorator';
 
 @Controller('tools')
 export class ToolsController {
@@ -25,6 +27,33 @@ export class ToolsController {
   @Get('owner/:ownerId')
   async findUserTools(@Param('ownerId') ownerId: number) {
     return await this.toolsService.findUserTools(ownerId);
+  }
+  @isPublicEndpoint()
+  @Get('random')
+  async getRandomTools(@Query('count') count: string) {
+    return await this.toolsService.getRandomTools({
+      count: Number(count) || 12,
+    });
+  }
+
+  @isPublicEndpoint()
+  @Get('search')
+  async searchTools(
+    @Query('searchTerm') searchTerm?: string,
+    @Query('category') category?: string,
+    @Query('sortBy') sortBy?: string,
+    @Query('availability') availability?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return await this.toolsService.searchTools({
+      searchTerm,
+      category,
+      sortBy: sortBy || 'newest',
+      availability: availability || 'all',
+      page: Number(page) || 1,
+      limit: Number(limit) || 12,
+    });
   }
 
   @Get()
