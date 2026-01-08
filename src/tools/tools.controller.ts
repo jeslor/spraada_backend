@@ -77,4 +77,17 @@ export class ToolsController {
   async remove(@Param('id') id: string, @Body() body: { profileId: number }) {
     return await this.toolsService.deleteTool(id, body.profileId);
   }
+
+  @UseGuards(ToolOwnerGuard)
+  @Patch(':id/availability')
+  async updateAvailabilityStatus(
+    @Param('id') id: string,
+    @Body() body: { available: boolean; profileId: number },
+  ) {
+    return await this.toolsService.updateAvailabilityStatus(
+      id,
+      body.available,
+      body.profileId,
+    );
+  }
 }
