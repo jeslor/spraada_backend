@@ -133,7 +133,8 @@ export default class AuthService {
           profile: {
             include: {
               myToolBox: true,
-              bookings: true,
+              rentedTools: true,
+              borrowedTools: true,
             },
           },
         },

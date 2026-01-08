@@ -6,6 +6,7 @@ import { ProfileModule } from './Profile/Profile.module';
 import { UploadModule } from './uploadResource/upload.module';
 import { ToolsModule } from './tools/tools.module';
 import { EmailModule } from './email/email.module';
+import { BookingModule } from './booking/booking.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { EmailModule } from './email/email.module';
     UploadModule,
     ToolsModule,
     EmailModule,
+    BookingModule,
   ],
   providers: [],
 })
