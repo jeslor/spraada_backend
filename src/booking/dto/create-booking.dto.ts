@@ -7,11 +7,11 @@ export class CreateBookingDto {
 
   @IsInt()
   @IsNotEmpty()
-  renterId: number;
+  rentedById: number;
 
   @IsInt()
   @IsNotEmpty()
-  borrowerId: number;
+  borrowedById: number;
 
   @IsDateString()
   @IsNotEmpty()

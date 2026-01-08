@@ -53,8 +53,8 @@ model Profile {
 model Booking {
   id          String        @id @default(cuid())
   toolId      String
-  renterId    Int
-  borrowerId  Int
+  rentedById    Int
+  borrowedById  Int
   pickUpDate  DateTime
   returnDate  DateTime
   totalPrice  Int
@@ -63,8 +63,8 @@ model Booking {
   updatedAt   DateTime      @updatedAt
 
   tool         Tool    @relation("toolBookings", fields: [toolId], references: [id])
-  toolOwner    Profile @relation("ownerBooking", fields: [renterId], references: [id])
-  toolBorrower Profile @relation("borrowerBooking", fields: [borrowerId], references: [id])
+  toolOwner    Profile @relation("ownerBooking", fields: [rentedById], references: [id])
+  toolBorrower Profile @relation("borrowerBooking", fields: [borrowedById], references: [id])
 }
 
 model Tool {

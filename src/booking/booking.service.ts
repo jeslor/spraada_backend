@@ -7,8 +7,14 @@ export class BookingService {
   constructor(private prisma: PrismaService) {}
 
   async create(createBookingDto: CreateBookingDto) {
-    const { toolId, renterId, borrowerId, pickUpDate, returnDate, totalPrice } =
-      createBookingDto;
+    const {
+      toolId,
+      rentedById,
+      borrowedById,
+      pickUpDate,
+      returnDate,
+      totalPrice,
+    } = createBookingDto;
 
     // Verify tool exists
     const tool = await this.prisma.tool.findUnique({
@@ -21,8 +27,8 @@ export class BookingService {
 
     // Verify profiles exist
     const [renterProfile, borrowerProfile] = await Promise.all([
-      this.prisma.profile.findUnique({ where: { id: renterId } }),
-      this.prisma.profile.findUnique({ where: { id: borrowerId } }),
+      this.prisma.profile.findUnique({ where: { id: rentedById } }),
+      this.prisma.profile.findUnique({ where: { id: borrowedById } }),
     ]);
 
     if (!renterProfile) {
@@ -37,8 +43,8 @@ export class BookingService {
     const booking = await this.prisma.booking.create({
       data: {
         toolId,
-        renterId,
-        borrowerId,
+        rentedById,
+        borrowedById,
         pickUpDate: new Date(pickUpDate),
         returnDate: new Date(returnDate),
         totalPrice,
@@ -105,7 +111,7 @@ export class BookingService {
   async findByProfile(profileId: number) {
     return await this.prisma.booking.findMany({
       where: {
-        OR: [{ renterId: profileId }, { borrowerId: profileId }],
+        OR: [{ rentedById: profileId }, { borrowedById: profileId }],
       },
       include: {
         tool: true,
