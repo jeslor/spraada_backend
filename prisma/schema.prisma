@@ -8,18 +8,18 @@ datasource db {
 }
 
 model User {
-  id                 Int      @id @default(autoincrement())
-  email              String   @unique
-  hash               String
-  hashedRefreshToken String?
+  id                       Int       @id @default(autoincrement())
+  email                    String    @unique
+  hash                     String
+  hashedRefreshToken       String?
+  isOnboarded              Boolean   @default(false)
+  role                     Role      @default(USER)
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime  @updatedAt
   hashedResetPasswordToken String?
-  resetPasswordTokenExpiry   DateTime?
-  hashedResetToken          String?
-  isOnboarded        Boolean  @default(false)
-  role               Role     @default(USER)
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
-  profile            Profile?
+  hashedResetToken         String?
+  resetPasswordTokenExpiry DateTime?
+  profile                  Profile?
 }
 
 model Profile {
@@ -39,24 +39,32 @@ model Profile {
   userId        Int       @unique
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-  bookings      Booking[]
+  
   user          User      @relation(fields: [userId], references: [id])
   myToolBox     Tool[]    @relation("OwnedTools")
   favoriteTools Tool[]    @relation("FavoriteTools")
-  borrowedTools Tool[]    @relation("BorrowedTools")
-  rentedTools   Tool[]    @relation("RentedTools")
+  
+  // Bookings where this profile is the owner renting out a tool
+  rentedTools   Booking[] @relation("ownerBooking")
+  // Bookings where this profile is the borrower renting a tool
+  borrowedTools Booking[] @relation("borrowerBooking")
 }
 
 model Booking {
-  id         String   @id @default(cuid())
-  profileId  Int
-  toolId     String
-  renterId   String
-  start      DateTime
-  end        DateTime
-  totalCents Int
-  status     String
-  profile    Profile  @relation(fields: [profileId], references: [id])
+  id          String        @id @default(cuid())
+  toolId      String
+  renterId    Int
+  borrowerId  Int
+  pickUpDate  DateTime
+  returnDate  DateTime
+  totalPrice  Int
+  status      BookingStatus @default(PENDING)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  tool         Tool    @relation("toolBookings", fields: [toolId], references: [id])
+  toolOwner    Profile @relation("ownerBooking", fields: [renterId], references: [id])
+  toolBorrower Profile @relation("borrowerBooking", fields: [borrowerId], references: [id])
 }
 
 model Tool {
@@ -68,18 +76,25 @@ model Tool {
   depositCents     Int
   replacementValue Int
   available        Boolean   @default(true)
+  toolPhotos       Json      @default("[]")
+  profileId        Int
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
-  profileId        Int
-  toolPhotos       Json      @default("[]")
-  profile          Profile   @relation("OwnedTools", fields: [profileId], references: [id])
-  favoritedBy      Profile[] @relation("FavoriteTools")
-  borrowedBy       Profile[] @relation("BorrowedTools")
-  rentedBy         Profile[] @relation("RentedTools")
+
+  profile     Profile   @relation("OwnedTools", fields: [profileId], references: [id])
+  bookings    Booking[] @relation("toolBookings")
+  favoritedBy Profile[] @relation("FavoriteTools")
 }
 
 enum Role {
   USER
   ADMIN
   RENTER
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
 }
