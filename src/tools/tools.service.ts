@@ -163,8 +163,11 @@ export class ToolsService {
             firstName: true,
             lastName: true,
             avatarUrl: true,
+            coverUrl: true,
+            bio: true,
             city: true,
             country: true,
+            createdAt: true,
           },
         },
       },
@@ -263,6 +266,34 @@ export class ToolsService {
         message: 'Failed to fetch random tools',
         data: [],
       };
+    }
+  }
+
+  async updateAvailabilityStatus(
+    id: string,
+    available: boolean,
+    profileId: number,
+  ) {
+    try {
+      const isToolOwner = await this.prisma.tool.findFirst({
+        where: {
+          id,
+          profileId,
+        },
+      });
+
+      if (!isToolOwner) {
+        throw new Error('You do not have permission to update this tool');
+      }
+
+      const updatedTool = await this.prisma.tool.update({
+        where: { id },
+        data: { available },
+      });
+
+      return updatedTool;
+    } catch (error) {
+      throw error;
     }
   }
 }
