@@ -136,4 +136,120 @@ export class BookingService {
       },
     });
   }
+
+  // Get tools that a profile has rented out to others
+  async getRentedToolsByProfile(profileId: number) {
+    const bookings = await this.prisma.booking.findMany({
+      where: { rentedById: profileId },
+      include: {
+        tool: {
+          include: {
+            profile: true,
+          },
+        },
+        toolBorrower: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            avatarUrl: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    // Return unique tools with their booking info
+    const toolsMap = new Map();
+    bookings.forEach((booking) => {
+      if (!toolsMap.has(booking.tool.id)) {
+        toolsMap.set(booking.tool.id, {
+          ...booking.tool,
+          latestBooking: {
+            id: booking.id,
+            pickUpDate: booking.pickUpDate,
+            returnDate: booking.returnDate,
+            totalPrice: booking.totalPrice,
+            status: booking.status,
+            borrower: booking.toolBorrower,
+          },
+        });
+      }
+    });
+
+    return Array.from(toolsMap.values());
+  }
+
+  // Get tools that a profile has borrowed from others
+  async getBorrowedToolsByProfile(profileId: number) {
+    const bookings = await this.prisma.booking.findMany({
+      where: { borrowedById: profileId },
+      include: {
+        tool: {
+          include: {
+            profile: true,
+          },
+        },
+        toolOwner: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            avatarUrl: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    // Return unique tools with their booking info
+    const toolsMap = new Map();
+    bookings.forEach((booking) => {
+      if (!toolsMap.has(booking.tool.id)) {
+        toolsMap.set(booking.tool.id, {
+          ...booking.tool,
+          latestBooking: {
+            id: booking.id,
+            pickUpDate: booking.pickUpDate,
+            returnDate: booking.returnDate,
+            totalPrice: booking.totalPrice,
+            status: booking.status,
+            owner: booking.toolOwner,
+          },
+        });
+      }
+    });
+
+    return Array.from(toolsMap.values());
+  }
+
+  async updateBookingStatus(id: string, status: string) {
+    const booking = await this.prisma.booking.findUnique({
+      where: { id },
+    });
+
+    if (!booking) {
+      throw new Error('Booking not found');
+    }
+
+    // Validate status
+    const validStatuses = ['PENDING', 'CONFIRMED', 'CANCELLED', 'COMPLETED'];
+    if (!validStatuses.includes(status)) {
+      throw new Error('Invalid booking status');
+    }
+
+    return await this.prisma.booking.update({
+      where: { id },
+      data: { status: status as any },
+      include: {
+        tool: true,
+        toolOwner: true,
+        toolBorrower: true,
+      },
+    });
+  }
 }

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Patch } from '@nestjs/common';
 import { BookingService } from './booking.service';
 import { CreateBookingDto } from './dto';
 
@@ -29,5 +29,23 @@ export class BookingController {
   @Get('tool/:toolId')
   findByTool(@Param('toolId') toolId: string) {
     return this.bookingService.findByTool(toolId);
+  }
+
+  @Get('rented/profile/:profileId')
+  getRentedToolsByProfile(@Param('profileId') profileId: string) {
+    return this.bookingService.getRentedToolsByProfile(Number(profileId));
+  }
+
+  @Get('borrowed/profile/:profileId')
+  getBorrowedToolsByProfile(@Param('profileId') profileId: string) {
+    return this.bookingService.getBorrowedToolsByProfile(Number(profileId));
+  }
+
+  @Patch(':id')
+  updateBookingStatus(
+    @Param('id') id: string,
+    @Body() updateData: { status: string },
+  ) {
+    return this.bookingService.updateBookingStatus(id, updateData.status);
   }
 }
