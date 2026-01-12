@@ -39,32 +39,29 @@ model Profile {
   userId        Int       @unique
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-  
+  borrowedTools Booking[] @relation("borrowerBooking")
+  rentedTools   Booking[] @relation("ownerBooking")
   user          User      @relation(fields: [userId], references: [id])
   myToolBox     Tool[]    @relation("OwnedTools")
   favoriteTools Tool[]    @relation("FavoriteTools")
-  
-  // Bookings where this profile is the owner renting out a tool
-  rentedTools   Booking[] @relation("ownerBooking")
-  // Bookings where this profile is the borrower renting a tool
-  borrowedTools Booking[] @relation("borrowerBooking")
 }
 
 model Booking {
-  id          String        @id @default(cuid())
-  toolId      String
-  rentedById    Int
-  borrowedById  Int
-  pickUpDate  DateTime
-  returnDate  DateTime
-  totalPrice  Int
-  status      BookingStatus @default(PENDING)
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-
-  tool         Tool    @relation("toolBookings", fields: [toolId], references: [id])
-  toolOwner    Profile @relation("ownerBooking", fields: [rentedById], references: [id])
-  toolBorrower Profile @relation("borrowerBooking", fields: [borrowedById], references: [id])
+  id           String        @id @default(cuid())
+  toolId       String
+  borrowedById Int
+  createdAt    DateTime      @default(now())
+  pickUpDate   DateTime
+  returnDate   DateTime
+  deletedByOwner Boolean     @default(false)
+  deletedByBorrower Boolean   @default(false)
+  totalPrice   Int
+  updatedAt    DateTime      @updatedAt
+  rentedById   Int
+  status       BookingStatus @default(PENDING)
+  toolBorrower Profile       @relation("borrowerBooking", fields: [borrowedById], references: [id], map: "Booking_borrowerId_fkey")
+  toolOwner    Profile       @relation("ownerBooking", fields: [rentedById], references: [id], map: "Booking_renterId_fkey")
+  tool         Tool          @relation("toolBookings", fields: [toolId], references: [id])
 }
 
 model Tool {
@@ -76,14 +73,13 @@ model Tool {
   depositCents     Int
   replacementValue Int
   available        Boolean   @default(true)
-  toolPhotos       Json      @default("[]")
-  profileId        Int
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
-
-  profile     Profile   @relation("OwnedTools", fields: [profileId], references: [id])
-  bookings    Booking[] @relation("toolBookings")
-  favoritedBy Profile[] @relation("FavoriteTools")
+  profileId        Int
+  toolPhotos       Json      @default("[]")
+  bookings         Booking[] @relation("toolBookings")
+  profile          Profile   @relation("OwnedTools", fields: [profileId], references: [id])
+  favoritedBy      Profile[] @relation("FavoriteTools")
 }
 
 enum Role {
