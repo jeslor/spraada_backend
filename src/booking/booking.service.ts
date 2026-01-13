@@ -294,4 +294,31 @@ export class BookingService {
       },
     });
   }
+
+  async markBookingAsDeleted(
+    id: string,
+    deletedByOwner?: boolean,
+    deletedByBorrower?: boolean,
+  ) {
+    const booking = await this.prisma.booking.findUnique({
+      where: { id },
+    });
+
+    if (!booking) {
+      throw new Error('Booking not found');
+    }
+
+    return await this.prisma.booking.update({
+      where: { id },
+      data: {
+        deletedByOwner: deletedByOwner ?? booking.deletedByOwner,
+        deletedByBorrower: deletedByBorrower ?? booking.deletedByBorrower,
+      },
+      include: {
+        tool: true,
+        toolOwner: true,
+        toolBorrower: true,
+      },
+    });
+  }
 }
