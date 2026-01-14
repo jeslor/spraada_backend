@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Body, Param, Patch } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Patch,
+  Delete,
+} from '@nestjs/common';
 import { BookingService } from './booking.service';
 import { CreateBookingDto } from './dto';
 
@@ -47,5 +55,18 @@ export class BookingController {
     @Body() updateData: { status: string },
   ) {
     return this.bookingService.updateBookingStatus(id, updateData.status);
+  }
+
+  @Patch(':id/delete')
+  markBookingAsDeleted(
+    @Param('id') id: string,
+    @Body()
+    deleteData: { deletedByOwner?: boolean; deletedByBorrower?: boolean },
+  ) {
+    return this.bookingService.markBookingAsDeleted(
+      id,
+      deleteData.deletedByOwner,
+      deleteData.deletedByBorrower,
+    );
   }
 }
