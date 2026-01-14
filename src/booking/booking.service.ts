@@ -153,7 +153,10 @@ export class BookingService {
   async findByProfile(profileId: number) {
     return await this.prisma.booking.findMany({
       where: {
-        OR: [{ rentedById: profileId }, { borrowedById: profileId }],
+        OR: [
+          { AND: [{ rentedById: profileId }, { deletedByOwner: false }] },
+          { AND: [{ borrowedById: profileId }, { deletedByBorrower: false }] },
+        ],
       },
       include: {
         tool: true,
