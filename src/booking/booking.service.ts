@@ -39,6 +39,48 @@ export class BookingService {
       throw new NotFoundException('Borrower profile not found');
     }
 
+    // Check for overlapping bookings
+    const pickUp = new Date(pickUpDate);
+    const returnD = new Date(returnDate);
+
+    const overlappingBookings = await this.prisma.booking.findMany({
+      where: {
+        toolId,
+        status: {
+          in: ['PENDING', 'CONFIRMED'],
+        },
+        OR: [
+          // New booking starts during existing booking
+          {
+            AND: [
+              { pickUpDate: { lte: pickUp } },
+              { returnDate: { gte: pickUp } },
+            ],
+          },
+          // New booking ends during existing booking
+          {
+            AND: [
+              { pickUpDate: { lte: returnD } },
+              { returnDate: { gte: returnD } },
+            ],
+          },
+          // New booking completely contains existing booking
+          {
+            AND: [
+              { pickUpDate: { gte: pickUp } },
+              { returnDate: { lte: returnD } },
+            ],
+          },
+        ],
+      },
+    });
+
+    if (overlappingBookings.length > 0) {
+      throw new Error(
+        'Tool is already booked for the selected dates. Please choose different dates.',
+      );
+    }
+
     // Create the booking
     const booking = await this.prisma.booking.create({
       data: {
@@ -245,6 +287,33 @@ export class BookingService {
     return await this.prisma.booking.update({
       where: { id },
       data: { status: status as any },
+      include: {
+        tool: true,
+        toolOwner: true,
+        toolBorrower: true,
+      },
+    });
+  }
+
+  async markBookingAsDeleted(
+    id: string,
+    deletedByOwner?: boolean,
+    deletedByBorrower?: boolean,
+  ) {
+    const booking = await this.prisma.booking.findUnique({
+      where: { id },
+    });
+
+    if (!booking) {
+      throw new Error('Booking not found');
+    }
+
+    return await this.prisma.booking.update({
+      where: { id },
+      data: {
+        deletedByOwner: deletedByOwner ?? booking.deletedByOwner,
+        deletedByBorrower: deletedByBorrower ?? booking.deletedByBorrower,
+      },
       include: {
         tool: true,
         toolOwner: true,

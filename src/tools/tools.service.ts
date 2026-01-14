@@ -255,7 +255,6 @@ export class ToolsService {
         skip: skip,
         take: TAKE,
       });
-      console.log(foundTools);
 
       return {
         message: 'Random tools fetched successfully',
