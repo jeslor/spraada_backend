@@ -21,9 +21,30 @@ export class MessageService {
     return savedMessage;
   };
 
-  getMessagesForUser(userId: number) {}
+  getMessagesForUser(userId: number) {
+    return this.prisma.message.findMany({
+      where: {
+        OR: [{ senderId: userId }, { receiverId: userId }],
+      },
+      orderBy: {
+        createdAt: 'asc',
+      },
+    });
+  }
 
-  getProfilesForUser(userId: number) {}
+  getProfilesForUser(userId: number) {
+    return this.prisma.profile.findMany({
+      where: {
+        OR: [
+          { sentMessages: { some: { receiverId: userId } } },
+          { receivedMessages: { some: { senderId: userId } } },
+        ],
+      },
+      orderBy: {
+        updatedAt: 'desc',
+      },
+    });
+  }
 
   findAll() {
     return `This action returns all message`;
