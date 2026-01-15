@@ -52,7 +52,7 @@ export class ChatsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
     //save the files to s3 and get the url
     let savedFiles: { key: string; url: string }[] = [];
-    if (data.files) {
+    if (data.files && data.files.length) {
       savedFiles = await this.uploadService.uploadImages(
         data.files,
         client.data.userId,
