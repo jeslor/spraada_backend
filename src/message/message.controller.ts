@@ -26,10 +26,10 @@ export class MessageController {
     return this.messageService.getMessagesForUser(Number(userId));
   }
 
-  @Get('profiles')
-  getProfiles(@Query('userId') userId: string) {
-    return this.messageService.getProfilesForUser(Number(userId));
-  }
+  // @Get('profiles')
+  // getProfiles(@Query('userId') userId: string) {
+  //   return this.messageService.getProfilesForUser(Number(userId));
+  // }
 
   @Get(':id')
   findOne(@Param('id') id: string) {

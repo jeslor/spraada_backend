@@ -26,25 +26,49 @@ export class MessageService {
       where: {
         OR: [{ senderId: userId }, { receiverId: userId }],
       },
+      include: {
+        sender: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            avatarUrl: true,
+          },
+        },
+        receiver: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            avatarUrl: true,
+          },
+        },
+      },
       orderBy: {
         createdAt: 'asc',
       },
     });
   }
 
-  getProfilesForUser(userId: number) {
-    return this.prisma.profile.findMany({
-      where: {
-        OR: [
-          { sentMessages: { some: { receiverId: userId } } },
-          { receivedMessages: { some: { senderId: userId } } },
-        ],
-      },
-      orderBy: {
-        updatedAt: 'desc',
-      },
-    });
-  }
+  // getProfilesForUser(userId: number) {
+  //   return this.prisma.profile.findMany({
+  //     where: {
+  //       OR: [
+  //         { sentMessages: { some: { receiverId: userId } } },
+  //         { receivedMessages: { some: { senderId: userId } } },
+  //       ],
+  //     },
+  //     select: {
+  //       id: true,
+  //       firstName: true,
+  //       lastName: true,
+  //       avatarUrl: true,
+  //     },
+  //     orderBy: {
+  //       updatedAt: 'desc',
+  //     },
+  //   });
+  // }
 
   findAll() {
     return `This action returns all message`;
