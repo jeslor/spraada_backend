@@ -44,24 +44,26 @@ model Profile {
   user          User      @relation(fields: [userId], references: [id])
   myToolBox     Tool[]    @relation("OwnedTools")
   favoriteTools Tool[]    @relation("FavoriteTools")
+  sentMessages  Message[] @relation("sentMessages")
+  receivedMessages Message[] @relation("receivedMessages")
 }
 
 model Booking {
-  id           String        @id @default(cuid())
-  toolId       String
-  borrowedById Int
-  createdAt    DateTime      @default(now())
-  pickUpDate   DateTime
-  returnDate   DateTime
-  deletedByOwner Boolean     @default(false)
-  deletedByBorrower Boolean   @default(false)
-  totalPrice   Int
-  updatedAt    DateTime      @updatedAt
-  rentedById   Int
-  status       BookingStatus @default(PENDING)
-  toolBorrower Profile       @relation("borrowerBooking", fields: [borrowedById], references: [id], map: "Booking_borrowerId_fkey")
-  toolOwner    Profile       @relation("ownerBooking", fields: [rentedById], references: [id], map: "Booking_renterId_fkey")
-  tool         Tool          @relation("toolBookings", fields: [toolId], references: [id])
+  id                String        @id @default(cuid())
+  toolId            String
+  borrowedById      Int
+  createdAt         DateTime      @default(now())
+  pickUpDate        DateTime
+  returnDate        DateTime
+  totalPrice        Int
+  updatedAt         DateTime      @updatedAt
+  rentedById        Int
+  status            BookingStatus @default(PENDING)
+  deletedByBorrower Boolean       @default(false)
+  deletedByOwner    Boolean       @default(false)
+  toolBorrower      Profile       @relation("borrowerBooking", fields: [borrowedById], references: [id], map: "Booking_borrowerId_fkey")
+  toolOwner         Profile       @relation("ownerBooking", fields: [rentedById], references: [id], map: "Booking_renterId_fkey")
+  tool              Tool          @relation("toolBookings", fields: [toolId], references: [id])
 }
 
 model Tool {
@@ -80,6 +82,18 @@ model Tool {
   bookings         Booking[] @relation("toolBookings")
   profile          Profile   @relation("OwnedTools", fields: [profileId], references: [id])
   favoritedBy      Profile[] @relation("FavoriteTools")
+}
+
+model Message {
+  id         String   @id @default(cuid())
+  senderId   Int
+  receiverId Int
+  content    String
+  mediaFiles  Json?    @default("[]")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  sender     Profile  @relation("sentMessages", fields: [senderId], references: [id])
+  receiver   Profile  @relation("receivedMessages", fields: [receiverId], references: [id])
 }
 
 enum Role {
