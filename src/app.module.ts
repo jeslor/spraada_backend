@@ -7,6 +7,8 @@ import { UploadModule } from './uploadResource/upload.module';
 import { ToolsModule } from './tools/tools.module';
 import { EmailModule } from './email/email.module';
 import { BookingModule } from './booking/booking.module';
+import { MessageModule } from './message/message.module';
+import { ChatsModule } from './events/Chats.module';
 
 @Module({
   imports: [
@@ -20,7 +22,9 @@ import { BookingModule } from './booking/booking.module';
     ToolsModule,
     EmailModule,
     BookingModule,
+    MessageModule,
+    ChatsModule,
   ],
-  providers: [],
+  // providers: [EventsGateway],
 })
 export class AppModule {}
