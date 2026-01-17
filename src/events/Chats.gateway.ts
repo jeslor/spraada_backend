@@ -43,7 +43,7 @@ export class ChatsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('chats')
   async handleMessage(
     @MessageBody()
-    data: { userId: number; text: string; files?: Express.Multer.File[] },
+    data: { userId: number; content: string; files?: Express.Multer.File[] },
     @ConnectedSocket() client: Socket,
   ) {
     if (!client.data.userId) {
@@ -63,14 +63,12 @@ export class ChatsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const savedMessage = await this.messageService.createMessage({
       senderId: client.data.userId,
       receiverId: data.userId,
-      content: data.text,
+      content: data.content,
       mediaFiles: savedFiles.map((file) => ({
         mediaUrl: file.url,
         mediaUrlKey: file.key,
       })),
     });
-
-    console.log(savedMessage);
 
     this.server.to(`user:${data.userId}`).emit('chats', savedMessage);
   }
