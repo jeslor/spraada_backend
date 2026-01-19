@@ -46,6 +46,7 @@ model Profile {
   favoriteTools Tool[]    @relation("FavoriteTools")
   sentMessages  Message[] @relation("sentMessages")
   receivedMessages Message[] @relation("receivedMessages")
+  unreadMessagesCounter UnreadMessagesCounter?
 }
 
 model Booking {
@@ -94,6 +95,16 @@ model Message {
   updatedAt  DateTime @updatedAt
   sender     Profile  @relation("sentMessages", fields: [senderId], references: [id])
   receiver   Profile  @relation("receivedMessages", fields: [receiverId], references: [id])
+}
+
+model UnreadMessagesCounter{
+    id        Int      @id @default(autoincrement())
+  profileId Int      @unique
+  counters  Json     @default("{}")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  profile   Profile @relation(fields: [profileId], references: [id])
 }
 
 enum Role {

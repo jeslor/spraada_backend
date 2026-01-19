@@ -23,8 +23,6 @@ export class ChatsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   server: Server;
 
   handleConnection(client: Socket) {
-    console.log('Handshake auth:', client.handshake.auth);
-
     const userId = client.handshake.auth?.userId;
     if (!userId) {
       console.log('Missing userId → disconnecting');
@@ -36,9 +34,7 @@ export class ChatsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     client.data.userId = userId;
   }
 
-  handleDisconnect(client: Socket) {
-    console.log(`User disconnected: ${client.data.userId}`);
-  }
+  handleDisconnect(client: Socket) {}
 
   @SubscribeMessage('chats')
   async handleMessage(

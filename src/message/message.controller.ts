@@ -26,10 +26,21 @@ export class MessageController {
     return this.messageService.getMessagesForUser(Number(userId));
   }
 
-  // @Get('profiles')
-  // getProfiles(@Query('userId') userId: string) {
-  //   return this.messageService.getProfilesForUser(Number(userId));
-  // }
+  @Get('unreadCount')
+  getUnreadMessagesCount(@Query('profileId') profileId: string) {
+    return this.messageService.getUnreadMessagesCount(Number(profileId));
+  }
+  @Patch('unreadCount/:messageCounterId')
+  updateUnreadMessagesCount(
+    @Param('messageCounterId') messageCounterId: string,
+    @Body() body: { profileId: number; counters: { [key: number]: number } },
+  ) {
+    return this.messageService.updateUnreadMessagesCount(
+      Number(messageCounterId),
+      Number(body.profileId),
+      body.counters,
+    );
+  }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
