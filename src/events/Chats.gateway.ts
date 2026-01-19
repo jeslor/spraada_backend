@@ -23,8 +23,6 @@ export class ChatsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   server: Server;
 
   handleConnection(client: Socket) {
-    console.log('Handshake auth:', client.handshake.auth);
-
     const userId = client.handshake.auth?.userId;
     if (!userId) {
       console.log('Missing userId → disconnecting');
@@ -36,14 +34,12 @@ export class ChatsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     client.data.userId = userId;
   }
 
-  handleDisconnect(client: Socket) {
-    console.log(`User disconnected: ${client.data.userId}`);
-  }
+  handleDisconnect(client: Socket) {}
 
   @SubscribeMessage('chats')
   async handleMessage(
     @MessageBody()
-    data: { userId: number; text: string; files?: Express.Multer.File[] },
+    data: { userId: number; content: string; files?: Express.Multer.File[] },
     @ConnectedSocket() client: Socket,
   ) {
     if (!client.data.userId) {
@@ -63,14 +59,12 @@ export class ChatsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const savedMessage = await this.messageService.createMessage({
       senderId: client.data.userId,
       receiverId: data.userId,
-      content: data.text,
+      content: data.content,
       mediaFiles: savedFiles.map((file) => ({
         mediaUrl: file.url,
         mediaUrlKey: file.key,
       })),
     });
-
-    console.log(savedMessage);
 
     this.server.to(`user:${data.userId}`).emit('chats', savedMessage);
   }

@@ -50,6 +50,33 @@ export class MessageService {
     });
   }
 
+  getUnreadMessagesCount(profileId: number) {
+    return this.prisma.unreadMessagesCounter.findFirst({
+      where: {
+        profileId: profileId,
+      },
+    });
+  }
+
+  updateUnreadMessagesCount(
+    messageCounterId: number,
+    profileId: number,
+    counters: Record<number, number>,
+  ) {
+    return this.prisma.unreadMessagesCounter.upsert({
+      where: {
+        profileId: profileId, // ✅ now recognized as unique
+      },
+      update: {
+        counters,
+      },
+      create: {
+        profileId,
+        counters,
+      },
+    });
+  }
+
   // getProfilesForUser(userId: number) {
   //   return this.prisma.profile.findMany({
   //     where: {
