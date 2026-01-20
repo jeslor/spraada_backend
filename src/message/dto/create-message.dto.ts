@@ -9,10 +9,8 @@ import {
 
 class MessageMediaDto {
   @IsString()
-  @IsNotEmpty()
   mediaUrl: string;
   @IsString()
-  @IsNotEmpty()
   mediaUrlKey: string;
 }
 
@@ -26,7 +24,6 @@ export class CreateMessageDto {
   @IsNotEmpty()
   @IsString()
   content: string;
-
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => MessageMediaDto)

@@ -13,8 +13,6 @@ export class EmailService {
     const user = this.configService.get<string>('EMAIL_USER');
     const pass = this.configService.get<string>('EMAIL_PASSWORD');
 
-    console.log('Email config:', { host, port, user, hasPass: !!pass });
-
     const transport = nodemailer.createTransport({
       host,
       port,
