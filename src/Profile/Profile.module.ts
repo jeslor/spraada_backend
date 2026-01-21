@@ -8,5 +8,6 @@ import PrismaService from 'src/prisma/prisma.service';
   imports: [AuthModule],
   providers: [ProfileService, PrismaService],
   controllers: [ProfileController],
+  exports: [ProfileService],
 })
 export class ProfileModule {}

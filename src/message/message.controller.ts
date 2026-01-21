@@ -11,6 +11,7 @@ import {
 import { MessageService } from './message.service';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { UpdateMessageDto } from './dto/update-message.dto';
+import { deleteMessageDto } from './dto/delete-message.dto';
 
 @Controller('message')
 export class MessageController {
@@ -52,8 +53,13 @@ export class MessageController {
     return this.messageService.update(+id, updateMessageDto);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.messageService.remove(+id);
+  // delete message endpoint
+  @Post('delete')
+  deleteMessage(@Body() dto: deleteMessageDto) {
+    return this.messageService.deleteMessage(
+      dto.message,
+      Number(dto.profileId),
+      Number(dto.userId),
+    );
   }
 }

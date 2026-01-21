@@ -3,10 +3,15 @@ import { CreateMessageDto } from './dto/create-message.dto';
 import { UpdateMessageDto } from './dto/update-message.dto';
 import PrismaService from 'src/prisma/prisma.service';
 import { UploadService } from 'src/uploadResource/upload.service';
+import { ProfileService } from 'src/Profile/Profile.service';
 
 @Injectable()
 export class MessageService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private profileService: ProfileService,
+    private uploadService: UploadService,
+  ) {}
 
   createMessage = (createMessageDto: CreateMessageDto) => {
     const { senderId, receiverId, content, mediaFiles } = createMessageDto;
@@ -109,7 +114,49 @@ export class MessageService {
     return `This action updates a #${id} message`;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} message`;
+  async deleteMessage(message: any, profileId: number, userId: number) {
+    try {
+      if (message.deletedByReceiver && message.deletedBySender) {
+        if (message.mediaFiles && message.mediaFiles.length > 0) {
+          const keys = message.mediaFiles.map((file) => file.mediaUrlKey);
+          const deleteMedia = await this.uploadService.deleteResources({
+            keys,
+            userId,
+            profileId,
+          });
+          if (!deleteMedia.data.length) {
+            throw new Error(
+              'Failed to delete media files associated with the message',
+            );
+          }
+        }
+        await this.prisma.message.update({
+          where: {
+            id: message.id,
+          },
+          data: {
+            deletedByReceiver: true,
+            deletedBySender: true,
+            content: '',
+            mediaFiles: [],
+          },
+        });
+        return {
+          success: true,
+          message: 'Message content permanently deleted',
+        };
+      }
+      await this.prisma.message.update({
+        where: {
+          id: message.id,
+        },
+        data: {
+          deletedByReceiver: true,
+        },
+      });
+      return { success: true, message: 'Message deleted for the user' };
+    } catch (error) {
+      return { success: false, message: 'Failed to delete message', error };
+    }
   }
 }

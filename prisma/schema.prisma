@@ -90,6 +90,8 @@ model Message {
   senderId   Int
   receiverId Int
   content    String
+  deletedBySender   Boolean  @default(false)
+  deletedByReceiver Boolean  @default(false)
   mediaFiles  Json?    @default("[]")
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
@@ -98,7 +100,7 @@ model Message {
 }
 
 model UnreadMessagesCounter{
-    id        Int      @id @default(autoincrement())
+  id        Int      @id @default(autoincrement())
   profileId Int      @unique
   counters  Json     @default("{}")
   createdAt DateTime @default(now())

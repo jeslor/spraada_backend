@@ -39,33 +39,22 @@ export class ChatsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('chats')
   async handleMessage(
     @MessageBody()
-    data: { userId: number; content: string; files?: Express.Multer.File[] },
+    data: {
+      id?: string;
+      deletedBySender?: boolean;
+      deletedByReceiver?: boolean;
+      receiverId: number;
+      senderId: number;
+      content: string;
+      mediaFiles: { mediaUrl: string; mediaUrlKey: string }[];
+    },
     @ConnectedSocket() client: Socket,
   ) {
     if (!client.data.userId) {
       client.emit('chatError', 'Unauthorized');
       return;
     }
-    //save the files to s3 and get the url
-    let savedFiles: { key: string; url: string }[] = [];
-    if (data.files && data.files.length) {
-      savedFiles = await this.uploadService.uploadImages(
-        data.files,
-        client.data.userId,
-        'chat-media',
-      );
-    }
-    //Save message to database with the file url if exists
-    const savedMessage = await this.messageService.createMessage({
-      senderId: client.data.userId,
-      receiverId: data.userId,
-      content: data.content,
-      mediaFiles: savedFiles.map((file) => ({
-        mediaUrl: file.url,
-        mediaUrlKey: file.key,
-      })),
-    });
 
-    this.server.to(`user:${data.userId}`).emit('chats', savedMessage);
+    this.server.to(`user:${data.receiverId}`).emit('chats', data);
   }
 }
