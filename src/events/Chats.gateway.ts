@@ -40,6 +40,9 @@ export class ChatsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   async handleMessage(
     @MessageBody()
     data: {
+      id?: string;
+      deletedBySender?: boolean;
+      deletedByReceiver?: boolean;
       receiverId: number;
       senderId: number;
       content: string;

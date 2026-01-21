@@ -55,4 +55,11 @@ export class ProfileService {
     });
     return updatedUser;
   }
+
+  async getProfileById(profileId: number) {
+    const profile = await this.prisma.profile.findUnique({
+      where: { id: profileId },
+    });
+    return profile;
+  }
 }
