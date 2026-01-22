@@ -105,6 +105,9 @@ model Notification {
   profileId  Int
   title      String
   content    String
+  profileMediaFiles Json?    @default("[]")
+  contentMediaFiles Json?    @default("[]")
+  link       String?
   isRead     Boolean  @default(false)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt

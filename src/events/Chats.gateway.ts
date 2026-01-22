@@ -8,6 +8,7 @@ import {
   OnGatewayDisconnect,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
+import { NotificationDto } from './dto/notification.dto';
 
 @WebSocketGateway({
   cors: { origin: '*' },
@@ -51,5 +52,19 @@ export class ChatsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
 
     this.server.to(`user:${data.receiverId}`).emit('chats', data);
+  }
+
+  @SubscribeMessage('notifications')
+  async handleNotification(
+    @MessageBody()
+    data: NotificationDto,
+    @ConnectedSocket() client: Socket,
+  ) {
+    if (!client.data.userId) {
+      client.emit('notificationError', 'Unauthorized');
+      return;
+    }
+
+    this.server.to(`user:${data.profileId}`).emit('notifications', data);
   }
 }
