@@ -4,7 +4,7 @@ import { UploadModule } from 'src/uploadResource/upload.module';
 import { MessageModule } from 'src/message/message.module';
 
 @Module({
-  imports: [UploadModule, MessageModule],
+  imports: [],
   providers: [ChatsGateway],
 })
 export class ChatsModule {}

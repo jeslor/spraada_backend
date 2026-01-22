@@ -8,17 +8,12 @@ import {
   OnGatewayDisconnect,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { MessageService } from 'src/message/message.service';
-import { UploadService } from 'src/uploadResource/upload.service';
 
 @WebSocketGateway({
   cors: { origin: '*' },
 })
 export class ChatsGateway implements OnGatewayConnection, OnGatewayDisconnect {
-  constructor(
-    private uploadService: UploadService,
-    private messageService: MessageService,
-  ) {}
+  constructor() {}
   @WebSocketServer()
   server: Server;
 
