@@ -8,16 +8,12 @@ import {
   ValidateNested,
 } from 'class-validator';
 
-export class NotificationMediaDto {
+export class CreateNotificationMediaDto {
   @IsString()
   mediaUrl: string;
 }
 
-export class NotificationDto {
-  @IsOptional()
-  @IsNumber()
-  id?: number;
-
+export class CreateNotificationDto {
   @IsNotEmpty()
   @IsNumber()
   profileId: number;
@@ -36,9 +32,9 @@ export class NotificationDto {
   @IsArray()
   @IsOptional()
   @ValidateNested({ each: true })
-  @Type(() => NotificationMediaDto)
-  profileMediaFiles?: NotificationMediaDto[];
-  contentMediaFiles?: NotificationMediaDto[];
+  @Type(() => CreateNotificationMediaDto)
+  profileMediaFiles?: CreateNotificationMediaDto[];
+  contentMediaFiles?: CreateNotificationMediaDto[];
   isRead: boolean;
   createdAt: Date;
 }

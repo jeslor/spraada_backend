@@ -48,6 +48,7 @@ model Profile {
   receivedMessages Message[] @relation("receivedMessages")
   notifications Notification[] @relation("notifications")
   unreadMessagesCounter UnreadMessagesCounter?
+  notificationsCounter  NotificationsCounter?
 }
 
 model Booking {
@@ -119,6 +120,16 @@ model UnreadMessagesCounter{
   id        Int      @id @default(autoincrement())
   profileId Int      @unique
   counters  Json     @default("{}")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  profile   Profile @relation(fields: [profileId], references: [id])
+}
+
+model NotificationsCounter {
+  id        Int      @id @default(autoincrement())
+  profileId Int      @unique
+  count     Int      @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

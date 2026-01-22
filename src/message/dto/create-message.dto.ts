@@ -18,12 +18,15 @@ export class CreateMessageDto {
   @IsNumber()
   @IsNotEmpty()
   senderId: number;
+
   @IsNumber()
   @IsNotEmpty()
   receiverId: number;
+
   @IsNotEmpty()
   @IsString()
   content: string;
+
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => MessageMediaDto)

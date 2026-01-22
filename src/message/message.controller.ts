@@ -31,7 +31,7 @@ export class MessageController {
   getUnreadMessagesCount(@Query('profileId') profileId: string) {
     return this.messageService.getUnreadMessagesCount(Number(profileId));
   }
-  @Patch('unreadCount/:messageCounterId')
+  @Post('unreadCount/:messageCounterId')
   updateUnreadMessagesCount(
     @Param('messageCounterId') messageCounterId: string,
     @Body() body: { profileId: number; counters: { [key: number]: number } },

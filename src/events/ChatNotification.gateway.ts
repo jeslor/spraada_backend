@@ -13,7 +13,9 @@ import { NotificationDto } from './dto/notification.dto';
 @WebSocketGateway({
   cors: { origin: '*' },
 })
-export class ChatsGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class ChatNotificationGateway
+  implements OnGatewayConnection, OnGatewayDisconnect
+{
   constructor() {}
   @WebSocketServer()
   server: Server;
