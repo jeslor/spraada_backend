@@ -31,9 +31,6 @@ export class NotificationService {
       profileId?: number;
     },
   ) {
-    console.log(notification);
-    console.log(notificationCounter);
-
     try {
       let updatedNotifications;
       let updatedNotificationsCounter;
@@ -63,7 +60,6 @@ export class NotificationService {
               count: notificationCounter.count,
             },
           });
-        console.log(updatedNotificationsCounter);
       }
       return {
         message: 'Notifications updated successfully',
