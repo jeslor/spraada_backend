@@ -34,6 +34,11 @@ export class CreateNotificationDto {
   @ValidateNested({ each: true })
   @Type(() => CreateNotificationMediaDto)
   profileMediaFiles?: CreateNotificationMediaDto[];
+
+  @IsArray()
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => CreateNotificationMediaDto)
   contentMediaFiles?: CreateNotificationMediaDto[];
   isRead: boolean;
   createdAt: Date;
