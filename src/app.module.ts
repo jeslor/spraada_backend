@@ -8,7 +8,8 @@ import { ToolsModule } from './tools/tools.module';
 import { EmailModule } from './email/email.module';
 import { BookingModule } from './booking/booking.module';
 import { MessageModule } from './message/message.module';
-import { ChatsModule } from './events/Chats.module';
+import { ChatNotificationModule } from './events/ChatNotification.module';
+import { NotificationModule } from './notification/notification.module';
 
 @Module({
   imports: [
@@ -23,7 +24,8 @@ import { ChatsModule } from './events/Chats.module';
     EmailModule,
     BookingModule,
     MessageModule,
-    ChatsModule,
+    ChatNotificationModule,
+    NotificationModule,
   ],
   // providers: [EventsGateway],
 })

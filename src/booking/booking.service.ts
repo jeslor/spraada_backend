@@ -300,8 +300,7 @@ export class BookingService {
 
   async markBookingAsDeleted(
     id: string,
-    deletedByOwner?: boolean,
-    deletedByBorrower?: boolean,
+    deletedBy: { deletedByOwner?: boolean; deletedByBorrower?: boolean },
   ) {
     const booking = await this.prisma.booking.findUnique({
       where: { id },
@@ -314,8 +313,12 @@ export class BookingService {
     return await this.prisma.booking.update({
       where: { id },
       data: {
-        deletedByOwner: deletedByOwner ?? booking.deletedByOwner,
-        deletedByBorrower: deletedByBorrower ?? booking.deletedByBorrower,
+        deletedByOwner: deletedBy.deletedByOwner
+          ? true
+          : booking.deletedByOwner,
+        deletedByBorrower: deletedBy.deletedByBorrower
+          ? true
+          : booking.deletedByBorrower,
       },
       include: {
         tool: true,
