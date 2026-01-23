@@ -63,10 +63,6 @@ export class BookingController {
     @Body()
     deleteData: { deletedByOwner?: boolean; deletedByBorrower?: boolean },
   ) {
-    return this.bookingService.markBookingAsDeleted(
-      id,
-      deleteData.deletedByOwner,
-      deleteData.deletedByBorrower,
-    );
+    return this.bookingService.markBookingAsDeleted(id, deleteData);
   }
 }
