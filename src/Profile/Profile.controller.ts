@@ -61,9 +61,28 @@ export class ProfileController {
     @Body() dto: EditProfileDto,
   ) {
     try {
-      return this.profileService.updateUser(id, dto);
+      return this.profileService.updateProfile(id, dto);
     } catch (error) {
       return { message: 'Error updating user', error };
+    }
+  }
+
+  @Patch('/:id/favorite-tools')
+  async updateFavoriteTools(
+    @Param('id') profileId: number,
+    @Body() body: { toolId: string; action: 'add' | 'remove' },
+  ) {
+    const { toolId, action } = body;
+    try {
+      if (action === 'add') {
+        return this.profileService.addFavoriteTool(profileId, toolId);
+      } else if (action === 'remove') {
+        return this.profileService.removeFavoriteTool(profileId, toolId);
+      } else {
+        return { message: 'Invalid action' };
+      }
+    } catch (error) {
+      return { message: 'Error updating favorite tools', error };
     }
   }
 }

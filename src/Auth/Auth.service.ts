@@ -127,6 +127,7 @@ export default class AuthService {
   //return user object without the hash
   async findUserById(id: number) {
     try {
+      // get the user and include the profile and related data
       const foundUser = await this.prisma.user.findUnique({
         where: { id },
         include: {
@@ -135,6 +136,7 @@ export default class AuthService {
               myToolBox: true,
               rentedTools: true,
               borrowedTools: true,
+              favoriteTools: true,
             },
           },
         },
