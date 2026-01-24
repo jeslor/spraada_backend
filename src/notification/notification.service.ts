@@ -78,6 +78,7 @@ export class NotificationService {
     return this.prismaService.notification.findMany({
       where: { profileId },
       orderBy: { createdAt: 'desc' },
+      take: 30,
     });
   }
 

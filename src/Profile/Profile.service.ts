@@ -43,15 +43,17 @@ export class ProfileService {
     // Implement the logic to get user profile by userId from the database using Prisma or any other ORM
     const profile = await this.prisma.profile.findUnique({
       where: { userId },
+      include: { favoriteTools: true },
     });
     return profile;
   }
 
-  async updateUser(id: number, dto: EditProfileDto) {
+  async updateProfile(id: number, dto: EditProfileDto) {
     // Implement the logic to update user details in the database using Prisma or any other ORM
     const updatedUser = await this.prisma.profile.update({
       where: { id },
       data: { ...dto },
+      include: { favoriteTools: true },
     });
     return updatedUser;
   }
@@ -59,7 +61,56 @@ export class ProfileService {
   async getProfileById(profileId: number) {
     const profile = await this.prisma.profile.findUnique({
       where: { id: profileId },
+      include: { favoriteTools: true },
     });
     return profile;
+  }
+
+  async addFavoriteTool(profileId: number, toolId: string) {
+    const tool = await this.prisma.tool.findUnique({
+      where: { id: toolId },
+    });
+
+    if (!tool) {
+      throw new Error('Tool not found');
+    }
+
+    const updatedProfile = await this.prisma.profile.update({
+      where: { id: profileId },
+      data: {
+        favoriteTools: {
+          connect: { id: toolId },
+        },
+      },
+      include: {
+        favoriteTools: true,
+      },
+    });
+
+    return updatedProfile;
+  }
+
+  async removeFavoriteTool(profileId: number, toolId: string) {
+    const tool = await this.prisma.tool.findUnique({
+      where: { id: toolId },
+    });
+
+    if (!tool) {
+      throw new Error('Tool not found');
+    }
+
+    const updatedProfile = await this.prisma.profile.update({
+      where: { id: profileId },
+      data: {
+        favoriteTools: {
+          disconnect: { id: toolId },
+        },
+      },
+      include: {
+        favoriteTools: true,
+      },
+    });
+
+    return updatedProfile;
   }
 }

@@ -1,9 +1,10 @@
+import { Tool } from '@prisma/client';
 import {
   IsEmail,
-  IsNotEmpty,
   IsOptional,
   IsPhoneNumber,
   IsString,
+  IsArray,
 } from 'class-validator';
 
 export class EditProfileDto {

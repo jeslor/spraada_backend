@@ -43,7 +43,8 @@ model Profile {
   rentedTools   Booking[] @relation("ownerBooking")
   user          User      @relation(fields: [userId], references: [id])
   myToolBox     Tool[]    @relation("OwnedTools")
-  favoriteTools Tool[]    @relation("FavoriteTools")
+  favoriteTools Tool[] @relation("FavoriteTools")
+
   sentMessages  Message[] @relation("sentMessages")
   receivedMessages Message[] @relation("receivedMessages")
   notifications Notification[] @relation("notifications")
@@ -84,7 +85,8 @@ model Tool {
   toolPhotos       Json      @default("[]")
   bookings         Booking[] @relation("toolBookings")
   profile          Profile   @relation("OwnedTools", fields: [profileId], references: [id])
-  favoritedBy      Profile[] @relation("FavoriteTools")
+  favoritedBy Profile[] @relation("FavoriteTools")
+
 }
 
 model Message {
