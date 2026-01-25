@@ -10,12 +10,14 @@ import { BookingModule } from './booking/booking.module';
 import { MessageModule } from './message/message.module';
 import { ChatNotificationModule } from './events/ChatNotification.module';
 import { NotificationModule } from './notification/notification.module';
+import { HomeModule } from './home/home.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    HomeModule,
     AuthModule,
     PrismaModule,
     ProfileModule,
