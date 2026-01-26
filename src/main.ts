@@ -13,7 +13,7 @@ async function bootstrap() {
     }),
   );
   app.enableCors({
-    origin: ['https://spraada-frontend.vercel.app'],
+    origin: ['https://spraada-frontend.vercel.app', 'http://localhost:3000'],
     credentials: true,
   });
   await app.listen(process.env.PORT ?? 4444);
