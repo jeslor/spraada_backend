@@ -16,6 +16,7 @@ import { CreateProfileDto, EditProfileDto } from './dto';
 import { Roles } from 'src/Auth/decorator/roles.decorator';
 import { RoleGuardGuard } from 'src/Auth/guard';
 import { ProfileOwnerGuard } from './Guard/profile-owner.guard';
+import { isPublicEndpoint } from 'src/Auth/decorator';
 
 //Not adding the guard here, as it's already applied globally in AuthModule
 @Controller('profile')
@@ -34,6 +35,7 @@ export class ProfileController {
     return createdProfile;
   }
 
+  @isPublicEndpoint()
   @Roles('USER', 'ADMIN')
   @UseGuards(RoleGuardGuard)
   @Get('/:id')
