@@ -24,10 +24,12 @@ export class ToolsController {
     return await this.toolsService.create(createToolDto);
   }
 
+  @isPublicEndpoint()
   @Get('owner/:ownerId')
   async findUserTools(@Param('ownerId') ownerId: number) {
     return await this.toolsService.findUserTools(ownerId);
   }
+
   @isPublicEndpoint()
   @Get('random')
   async getRandomTools(@Query('count') count: string) {
@@ -56,11 +58,13 @@ export class ToolsController {
     });
   }
 
+  @isPublicEndpoint()
   @Get()
   async findAll() {
     return await this.toolsService.findAll();
   }
 
+  @isPublicEndpoint()
   @Get(':id')
   async findOne(@Param('id') id: string) {
     return await this.toolsService.findOne(id);
