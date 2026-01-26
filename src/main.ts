@@ -12,6 +12,10 @@ async function bootstrap() {
       transform: true,
     }),
   );
+  app.enableCors({
+    origin: ['https://spraada-frontend.vercel.app'],
+    credentials: true,
+  });
   await app.listen(process.env.PORT ?? 4444);
 }
 bootstrap();
