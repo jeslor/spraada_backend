@@ -18,7 +18,6 @@ export class CreateProfileDto {
   @IsString()
   bio: string;
 
-  @IsPhoneNumber()
   @IsNotEmpty()
   phone: string;
 
