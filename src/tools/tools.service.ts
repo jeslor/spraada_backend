@@ -256,10 +256,7 @@ export class ToolsService {
         take: TAKE,
       });
 
-      return {
-        message: 'Random tools fetched successfully',
-        data: foundTools,
-      };
+      return foundTools;
     } catch (error) {
       return {
         message: 'Failed to fetch random tools',
