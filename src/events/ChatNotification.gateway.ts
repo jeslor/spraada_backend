@@ -11,10 +11,7 @@ import { Server, Socket } from 'socket.io';
 import { NotificationDto } from './dto/notification.dto';
 
 @WebSocketGateway({
-  cors: {
-    origin: 'https://spraada-frontend.vercel.app/*',
-    methods: ['GET', 'POST'],
-  },
+  cors: { origin: '*' },
 })
 export class ChatNotificationGateway
   implements OnGatewayConnection, OnGatewayDisconnect
