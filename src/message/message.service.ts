@@ -56,11 +56,15 @@ export class MessageService {
   }
 
   getUnreadMessagesCount(profileId: number) {
-    return this.prisma.unreadMessagesCounter.findFirst({
+    const unreadMessagesCounter = this.prisma.unreadMessagesCounter.findFirst({
       where: {
         profileId: profileId,
       },
     });
+    if (!unreadMessagesCounter) {
+      throw new Error('No unread messages counter found for this profileId');
+    }
+    return unreadMessagesCounter;
   }
 
   updateUnreadMessagesCount(
