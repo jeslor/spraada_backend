@@ -26,8 +26,14 @@ export class MessageController {
 
   @isPublicEndpoint()
   @Get()
-  getMessages(@Query('userId') userId: string) {
-    return this.messageService.getMessagesForUser(Number(userId));
+  getMessages(
+    @Query('profileId') profileId: string,
+    @Query('page') page: string,
+  ) {
+    return this.messageService.getMessagesForUser(
+      Number(profileId),
+      Number(page),
+    );
   }
 
   @isPublicEndpoint()
