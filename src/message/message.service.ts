@@ -26,10 +26,14 @@ export class MessageService {
     return savedMessage;
   };
 
-  getMessagesForUser(userId: number) {
-    return this.prisma.message.findMany({
+  async getMessagesForUser(profileId: number, page: number) {
+    const skipItems = (page - 1) * 20;
+    console.log(profileId, page, 'getting this in the services messages');
+
+    // fetch messages involving the user
+    const messages = await this.prisma.message.findMany({
       where: {
-        OR: [{ senderId: userId }, { receiverId: userId }],
+        OR: [{ senderId: profileId }, { receiverId: profileId }],
       },
       include: {
         sender: {
@@ -52,15 +56,49 @@ export class MessageService {
       orderBy: {
         createdAt: 'asc',
       },
+      skip: skipItems,
+      take: 20,
     });
+
+    // extract unique message profiles
+    const messageProfiles = messages.reduce(
+      (acc, message) => {
+        if (!message.sender || !message.sender.id || !message.receiver)
+          return acc;
+        const otherProfile =
+          message.sender.id === profileId ? message.receiver : message.sender;
+
+        if (!acc.some((p) => p.id === otherProfile.id)) {
+          acc.push({
+            id: otherProfile.id,
+            firstName: otherProfile.firstName,
+            lastName: otherProfile.lastName,
+            avatarUrl: otherProfile.avatarUrl!,
+          });
+        }
+        return acc;
+      },
+      [] as {
+        id: number;
+        firstName: string;
+        lastName: string;
+        avatarUrl?: string;
+      }[],
+    );
+
+    return {
+      messages,
+      messageProfiles,
+    };
   }
 
-  getUnreadMessagesCount(profileId: number) {
-    const unreadMessagesCounter = this.prisma.unreadMessagesCounter.findFirst({
-      where: {
-        profileId: profileId,
-      },
-    });
+  async getUnreadMessagesCount(profileId: number) {
+    const unreadMessagesCounter =
+      await this.prisma.unreadMessagesCounter.findFirst({
+        where: {
+          profileId: profileId,
+        },
+      });
     if (!unreadMessagesCounter) {
       throw new Error('No unread messages counter found for this profileId');
     }
