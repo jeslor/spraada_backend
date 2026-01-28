@@ -11,6 +11,7 @@ import { MessageModule } from './message/message.module';
 import { ChatNotificationModule } from './events/ChatNotification.module';
 import { NotificationModule } from './notification/notification.module';
 import { HomeModule } from './home/home.module';
+import { ConversationModule } from './conversation/conversation.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { HomeModule } from './home/home.module';
     MessageModule,
     ChatNotificationModule,
     NotificationModule,
+    ConversationModule,
   ],
   // providers: [EventsGateway],
 })

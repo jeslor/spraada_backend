@@ -14,14 +14,10 @@ class MessageMediaDto {
   mediaUrlKey: string;
 }
 
-export class CreateMessageDto {
+export class MessageDto {
   @IsNumber()
   @IsNotEmpty()
   senderId: number;
-
-  @IsNumber()
-  @IsNotEmpty()
-  receiverId: number;
 
   @IsNotEmpty()
   @IsString()
@@ -31,4 +27,15 @@ export class CreateMessageDto {
   @ValidateNested({ each: true })
   @Type(() => MessageMediaDto)
   mediaFiles?: MessageMediaDto[];
+}
+
+export class CreateMessageDto {
+  message: MessageDto;
+  @IsNumber()
+  @IsNotEmpty()
+  otherProfileId: number;
+
+  @IsNumber()
+  @IsNotEmpty()
+  conversationId: number;
 }

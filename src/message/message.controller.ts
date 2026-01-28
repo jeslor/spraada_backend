@@ -24,49 +24,6 @@ export class MessageController {
     return this.messageService.createMessage(createMessageDto);
   }
 
-  @isPublicEndpoint()
-  @Get()
-  getMessages(
-    @Query('profileId') profileId: string,
-    @Query('page') page: string,
-  ) {
-    return this.messageService.getMessagesForUser(
-      Number(profileId),
-      Number(page),
-    );
-  }
-
-  @isPublicEndpoint()
-  @Get('unreadCount')
-  getUnreadMessagesCount(@Query('profileId') profileId: string) {
-    return this.messageService.getUnreadMessagesCount(Number(profileId));
-  }
-
-  @isPublicEndpoint()
-  @Post('unreadCount/:messageCounterId')
-  updateUnreadMessagesCount(
-    @Param('messageCounterId') messageCounterId: string,
-    @Body() body: { profileId: number; counters: { [key: number]: number } },
-  ) {
-    return this.messageService.updateUnreadMessagesCount(
-      Number(messageCounterId),
-      Number(body.profileId),
-      body.counters,
-    );
-  }
-
-  @isPublicEndpoint()
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.messageService.findOne(+id);
-  }
-
-  @isPublicEndpoint()
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateMessageDto: UpdateMessageDto) {
-    return this.messageService.update(+id, updateMessageDto);
-  }
-
   // delete message endpoint
   @isPublicEndpoint()
   @Post('delete')

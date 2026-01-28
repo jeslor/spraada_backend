@@ -34,7 +34,7 @@ export class ChatNotificationGateway
 
   handleDisconnect(client: Socket) {}
 
-  @SubscribeMessage('chats')
+  @SubscribeMessage('conversation:new_message')
   async handleMessage(
     @MessageBody()
     data: {
@@ -53,7 +53,9 @@ export class ChatNotificationGateway
       return;
     }
 
-    this.server.to(`user:${data.receiverId}`).emit('chats', data);
+    this.server
+      .to(`user:${data.receiverId}`)
+      .emit('conversation:new_message', data);
   }
 
   @SubscribeMessage('notifications')
