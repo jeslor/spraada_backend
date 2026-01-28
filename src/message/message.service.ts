@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { CreateMessageDto } from './dto/create-message.dto';
 import PrismaService from 'src/prisma/prisma.service';
 import { UploadService } from 'src/uploadResource/upload.service';
 import { ProfileService } from 'src/Profile/Profile.service';
 import { ConversationService } from 'src/conversation/conversation.service';
+import { CreateMessageDto } from './dto/create-message.dto';
 
 @Injectable()
 export class MessageService {
@@ -14,13 +14,13 @@ export class MessageService {
   ) {}
 
   createMessage = async (createMessageDto: CreateMessageDto) => {
-    const { message } = createMessageDto;
+    const { message, otherProfileId } = createMessageDto;
     const { senderId, content, mediaFiles } = message;
 
     // get or create conversation between sender and receiver
     const conversation = await this.conversationService.getOrCreateConversation(
       senderId,
-      createMessageDto.otherProfileId,
+      otherProfileId,
     );
 
     const savedMessage = await this.prisma.message.create({

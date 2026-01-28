@@ -3,6 +3,7 @@ import {
   IsArray,
   IsNotEmpty,
   IsNumber,
+  IsOptional,
   IsString,
   ValidateNested,
 } from 'class-validator';
@@ -23,6 +24,7 @@ export class MessageDto {
   @IsString()
   content: string;
 
+  @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => MessageMediaDto)
@@ -30,12 +32,12 @@ export class MessageDto {
 }
 
 export class CreateMessageDto {
-  message: MessageDto;
-  @IsNumber()
+  @ValidateNested() // Tells class-validator to check the object
+  @Type(() => MessageDto) // Tells class-transformer how to instantiate it
   @IsNotEmpty()
-  otherProfileId: number;
+  message: MessageDto;
 
   @IsNumber()
   @IsNotEmpty()
-  conversationId: number;
+  otherProfileId: number;
 }
