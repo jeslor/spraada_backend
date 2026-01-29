@@ -37,4 +37,16 @@ export class MessageController {
       cursorTo,
     );
   }
+
+  @isPublicEndpoint()
+  @Post('new/:conversationId')
+  getNewMessagesForConversation(
+    @Param('conversationId') conversationId: number,
+    @Body('cursorTo') cursorTo: string,
+  ) {
+    return this.messageService.getNewMessagesForConversation(
+      conversationId,
+      cursorTo,
+    );
+  }
 }

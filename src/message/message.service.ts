@@ -107,4 +107,24 @@ export class MessageService {
 
     return messages;
   }
+
+  async getNewMessagesForConversation(
+    conversationId: number,
+    cursorTo?: string,
+  ) {
+    // Get messages forwards using the cursor faster way
+    const messages = await this.prisma.message.findMany({
+      where: { conversationId },
+      orderBy: [
+        { createdAt: 'asc' }, // Primary: Time-based
+        { id: 'asc' }, // Secondary: Lexicographical tie-breaker
+      ],
+      ...(cursorTo && {
+        cursor: { id: cursorTo }, // Prisma finds this exact string
+        skip: 1,
+      }),
+    });
+
+    return messages;
+  }
 }
