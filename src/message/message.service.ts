@@ -87,9 +87,9 @@ export class MessageService {
 
   async getMoreMessagesForConversation(
     conversationId: number,
-    cursorTo?: string, // This should be ID "16"
+    cursorTo?: string,
   ) {
-    const pageSize = 5;
+    const pageSize = 20;
 
     // Get messages backwards using the cursor faster way
     const messages = await this.prisma.message.findMany({

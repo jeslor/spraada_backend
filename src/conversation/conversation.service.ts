@@ -66,7 +66,7 @@ export class ConversationService {
           orderBy: {
             createdAt: 'desc',
           },
-          take: 5,
+          take: 10, // Fetch latest 10 messages
         },
       },
     });
