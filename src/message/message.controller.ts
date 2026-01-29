@@ -30,7 +30,7 @@ export class MessageController {
   @Post('more/:conversationId')
   getMoreMessagesForConversation(
     @Param('conversationId') conversationId: number,
-    @Body('cursor') cursorTo: string,
+    @Body('cursorTo') cursorTo: string,
   ) {
     return this.messageService.getMoreMessagesForConversation(
       conversationId,

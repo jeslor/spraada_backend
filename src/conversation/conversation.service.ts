@@ -64,7 +64,7 @@ export class ConversationService {
         },
         messages: {
           orderBy: {
-            createdAt: 'asc',
+            createdAt: 'desc',
           },
           take: 5,
         },
@@ -78,7 +78,7 @@ export class ConversationService {
       return {
         id: conversation.id,
         otherParticipant: otherParticipant,
-        messages: conversation.messages,
+        messages: conversation.messages.reverse(),
       };
     });
   }

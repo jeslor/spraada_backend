@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import PrismaService from 'src/prisma/prisma.service';
 import { UploadService } from 'src/uploadResource/upload.service';
-import { ProfileService } from 'src/Profile/Profile.service';
 import { ConversationService } from 'src/conversation/conversation.service';
 import { CreateMessageDto } from './dto/create-message.dto';
 
@@ -86,32 +85,26 @@ export class MessageService {
     }
   }
 
-  // get last read message for a conversation
   async getMoreMessagesForConversation(
     conversationId: number,
-    cursorTo?: string, // last message ID you already have
+    cursorTo?: string, // This should be ID "16"
   ) {
     const pageSize = 5;
 
-    try {
-      const messages = await this.prisma.message.findMany({
-        where: {
-          conversationId,
-        },
-        orderBy: [
-          { createdAt: 'desc' },
-          { id: 'desc' }, // tie-breaker (VERY important)
-        ],
-        take: pageSize,
-        ...(cursorTo && {
-          cursor: { id: cursorTo }, // STRING cursor ✔
-          skip: 1, // avoid duplicate
-        }),
-      });
+    // Get messages backwards using the cursor faster way
+    const messages = await this.prisma.message.findMany({
+      where: { conversationId },
+      take: pageSize, // Still moving "down" the list
+      orderBy: [
+        { createdAt: 'desc' }, // Primary: Time-based
+        { id: 'desc' }, // Secondary: Lexicographical tie-breaker
+      ],
+      ...(cursorTo && {
+        cursor: { id: cursorTo }, // Prisma finds this exact string
+        skip: 1,
+      }),
+    });
 
-      return messages;
-    } catch (error) {
-      throw error;
-    }
+    return messages;
   }
 }
