@@ -14,24 +14,30 @@ export class MessageService {
   ) {}
 
   createMessage = async (createMessageDto: CreateMessageDto) => {
-    const { message, otherProfileId } = createMessageDto;
-    const { senderId, content, mediaFiles } = message;
+    try {
+      const { message, otherProfileId } = createMessageDto;
+      const { senderId, content, mediaFiles } = message;
 
-    // get or create conversation between sender and receiver
-    const conversation = await this.conversationService.getOrCreateConversation(
-      senderId,
-      otherProfileId,
-    );
+      // get or create conversation between sender and receiver
+      const conversation =
+        await this.conversationService.getOrCreateConversation(
+          senderId,
+          otherProfileId,
+        );
 
-    const savedMessage = await this.prisma.message.create({
-      data: {
-        senderId,
-        conversationId: conversation.id,
-        content,
-        mediaFiles: mediaFiles ? mediaFiles.map((file) => ({ ...file })) : [],
-      },
-    });
-    return savedMessage;
+      // create message in the conversation
+      const savedMessage = await this.prisma.message.create({
+        data: {
+          senderId,
+          conversationId: conversation.id,
+          content,
+          mediaFiles: mediaFiles ? mediaFiles.map((file) => ({ ...file })) : [],
+        },
+      });
+      return savedMessage;
+    } catch (error) {
+      throw error;
+    }
   };
 
   async deleteMessage(message: any, profileId: number, userId: number) {
@@ -77,6 +83,35 @@ export class MessageService {
       return { success: true, message: 'Message deleted for the user' };
     } catch (error) {
       return { success: false, message: 'Failed to delete message', error };
+    }
+  }
+
+  // get last read message for a conversation
+  async getMoreMessagesForConversation(
+    conversationId: number,
+    cursorTo?: string, // last message ID you already have
+  ) {
+    const pageSize = 5;
+
+    try {
+      const messages = await this.prisma.message.findMany({
+        where: {
+          conversationId,
+        },
+        orderBy: [
+          { createdAt: 'desc' },
+          { id: 'desc' }, // tie-breaker (VERY important)
+        ],
+        take: pageSize,
+        ...(cursorTo && {
+          cursor: { id: cursorTo }, // STRING cursor ✔
+          skip: 1, // avoid duplicate
+        }),
+      });
+
+      return messages;
+    } catch (error) {
+      throw error;
     }
   }
 }

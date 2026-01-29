@@ -1,8 +1,9 @@
-import { Controller, Get, Post, Body } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param } from '@nestjs/common';
 import { MessageService } from './message.service';
 import { deleteMessageDto } from './dto/delete-message.dto';
 import { isPublicEndpoint } from 'src/Auth/decorator';
 import { CreateMessageDto } from './dto/create-message.dto';
+import { cursorTo } from 'readline';
 
 @Controller('message')
 export class MessageController {
@@ -11,8 +12,6 @@ export class MessageController {
   @isPublicEndpoint()
   @Post()
   create(@Body() createMessageDto: CreateMessageDto) {
-    console.log(createMessageDto);
-
     return this.messageService.createMessage(createMessageDto);
   }
 
@@ -24,6 +23,18 @@ export class MessageController {
       dto.message,
       Number(dto.profileId),
       Number(dto.userId),
+    );
+  }
+
+  @isPublicEndpoint()
+  @Post('more/:conversationId')
+  getMoreMessagesForConversation(
+    @Param('conversationId') conversationId: number,
+    @Body('cursor') cursorTo: string,
+  ) {
+    return this.messageService.getMoreMessagesForConversation(
+      conversationId,
+      cursorTo,
     );
   }
 }
