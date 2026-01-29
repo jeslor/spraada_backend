@@ -34,17 +34,19 @@ export class ChatNotificationGateway
 
   handleDisconnect(client: Socket) {}
 
-  @SubscribeMessage('conversation:new_message')
+  @SubscribeMessage('conversation')
   async handleMessage(
     @MessageBody()
     data: {
-      id?: string;
-      deletedBySender?: boolean;
-      deletedByReceiver?: boolean;
       receiverId: number;
-      senderId: number;
-      content: string;
-      mediaFiles: { mediaUrl: string; mediaUrlKey: string }[];
+      conversationId: number;
+      otherParticipant: {
+        id: number;
+        firstName: string;
+        lastName: string;
+        avatarUrl?: string;
+      };
+      message: any;
     },
     @ConnectedSocket() client: Socket,
   ) {
@@ -52,12 +54,18 @@ export class ChatNotificationGateway
       client.emit('chatError', 'Unauthorized');
       return;
     }
+    console.log(client);
 
-    this.server
-      .to(`user:${data.receiverId}`)
-      .emit('conversation:new_message', data);
+    console.log(data);
+
+    this.server.to(`user:${data.receiverId}`).emit('conversation', {
+      conversationId: data.conversationId,
+      otherParticipant: data.otherParticipant,
+      message: data.message,
+    });
   }
 
+  // notification event
   @SubscribeMessage('notifications')
   async handleNotification(
     @MessageBody()
