@@ -3,6 +3,7 @@ import {
   IsArray,
   IsNotEmpty,
   IsNumber,
+  IsOptional,
   IsString,
   ValidateNested,
 } from 'class-validator';
@@ -14,21 +15,29 @@ class MessageMediaDto {
   mediaUrlKey: string;
 }
 
-export class CreateMessageDto {
+export class MessageDto {
   @IsNumber()
   @IsNotEmpty()
   senderId: number;
-
-  @IsNumber()
-  @IsNotEmpty()
-  receiverId: number;
 
   @IsNotEmpty()
   @IsString()
   content: string;
 
+  @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => MessageMediaDto)
   mediaFiles?: MessageMediaDto[];
+}
+
+export class CreateMessageDto {
+  @ValidateNested() // Tells class-validator to check the object
+  @Type(() => MessageDto) // Tells class-transformer how to instantiate it
+  @IsNotEmpty()
+  message: MessageDto;
+
+  @IsNumber()
+  @IsNotEmpty()
+  otherProfileId: number;
 }

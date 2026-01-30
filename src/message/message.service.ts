@@ -1,160 +1,57 @@
 import { Injectable } from '@nestjs/common';
-import { CreateMessageDto } from './dto/create-message.dto';
-import { UpdateMessageDto } from './dto/update-message.dto';
 import PrismaService from 'src/prisma/prisma.service';
 import { UploadService } from 'src/uploadResource/upload.service';
-import { ProfileService } from 'src/Profile/Profile.service';
+import { ConversationService } from 'src/conversation/conversation.service';
+import { CreateMessageDto } from './dto/create-message.dto';
+import { ChatNotificationGateway } from 'src/events/ChatNotification.gateway';
 
 @Injectable()
 export class MessageService {
   constructor(
     private prisma: PrismaService,
-    private profileService: ProfileService,
     private uploadService: UploadService,
+    private conversationService: ConversationService,
+    private chatNotificationGateway: ChatNotificationGateway,
   ) {}
 
-  createMessage = (createMessageDto: CreateMessageDto) => {
-    const { senderId, receiverId, content, mediaFiles } = createMessageDto;
-    const savedMessage = this.prisma.message.create({
-      data: {
-        senderId,
-        receiverId,
-        content,
-        mediaFiles: mediaFiles ? mediaFiles.map((file) => ({ ...file })) : [],
-      },
-    });
-    return savedMessage;
-  };
+  createMessage = async (createMessageDto: CreateMessageDto) => {
+    try {
+      const { message, otherProfileId } = createMessageDto;
+      const { senderId, content, mediaFiles } = message;
 
-  async getMessagesForUser(profileId: number, page: number) {
-    const skipItems = (page - 1) * 20;
-    console.log(profileId, page, 'getting this in the services messages');
+      // get or create conversation between sender and receiver
+      const conversation =
+        await this.conversationService.getOrCreateConversation(
+          senderId,
+          otherProfileId,
+        );
 
-    // fetch messages involving the user
-    const messages = await this.prisma.message.findMany({
-      where: {
-        OR: [{ senderId: profileId }, { receiverId: profileId }],
-      },
-      include: {
-        sender: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            avatarUrl: true,
-          },
-        },
-        receiver: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            avatarUrl: true,
-          },
-        },
-      },
-      orderBy: {
-        createdAt: 'asc',
-      },
-      skip: skipItems,
-      take: 20,
-    });
-
-    // extract unique message profiles
-    const messageProfiles = messages.reduce(
-      (acc, message) => {
-        if (!message.sender || !message.sender.id || !message.receiver)
-          return acc;
-        const otherProfile =
-          message.sender.id === profileId ? message.receiver : message.sender;
-
-        if (!acc.some((p) => p.id === otherProfile.id)) {
-          acc.push({
-            id: otherProfile.id,
-            firstName: otherProfile.firstName,
-            lastName: otherProfile.lastName,
-            avatarUrl: otherProfile.avatarUrl!,
-          });
-        }
-        return acc;
-      },
-      [] as {
-        id: number;
-        firstName: string;
-        lastName: string;
-        avatarUrl?: string;
-      }[],
-    );
-
-    return {
-      messages,
-      messageProfiles,
-    };
-  }
-
-  async getUnreadMessagesCount(profileId: number) {
-    const unreadMessagesCounter =
-      await this.prisma.unreadMessagesCounter.findFirst({
-        where: {
-          profileId: profileId,
+      // create message in the conversation
+      const savedMessage = await this.prisma.message.create({
+        data: {
+          senderId,
+          conversationId: conversation.id,
+          content,
+          mediaFiles: mediaFiles ? mediaFiles.map((file) => ({ ...file })) : [],
         },
       });
-    if (!unreadMessagesCounter) {
-      throw new Error('No unread messages counter found for this profileId');
+      const otherParticipant =
+        conversation.participantOneId === senderId
+          ? conversation.participantTwo
+          : conversation.participantOne;
+
+      this.sendMessageToSocket(
+        otherProfileId,
+        conversation.id,
+        otherParticipant,
+        savedMessage,
+      );
+
+      return savedMessage;
+    } catch (error) {
+      throw error;
     }
-    return unreadMessagesCounter;
-  }
-
-  updateUnreadMessagesCount(
-    messageCounterId: number,
-    profileId: number,
-    counters: Record<number, number>,
-  ) {
-    return this.prisma.unreadMessagesCounter.upsert({
-      where: {
-        profileId: profileId, // ✅ now recognized as unique
-      },
-      update: {
-        counters,
-      },
-      create: {
-        profileId,
-        counters,
-      },
-    });
-  }
-
-  // getProfilesForUser(userId: number) {
-  //   return this.prisma.profile.findMany({
-  //     where: {
-  //       OR: [
-  //         { sentMessages: { some: { receiverId: userId } } },
-  //         { receivedMessages: { some: { senderId: userId } } },
-  //       ],
-  //     },
-  //     select: {
-  //       id: true,
-  //       firstName: true,
-  //       lastName: true,
-  //       avatarUrl: true,
-  //     },
-  //     orderBy: {
-  //       updatedAt: 'desc',
-  //     },
-  //   });
-  // }
-
-  findAll() {
-    return `This action returns all message`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} message`;
-  }
-
-  update(id: number, updateMessageDto: UpdateMessageDto) {
-    return `This action updates a #${id} message`;
-  }
+  };
 
   async deleteMessage(message: any, profileId: number, userId: number) {
     try {
@@ -172,7 +69,7 @@ export class MessageService {
             );
           }
         }
-        await this.prisma.message.update({
+        const messageUpdated = await this.prisma.message.update({
           where: {
             id: message.id,
           },
@@ -182,7 +79,58 @@ export class MessageService {
             content: '',
             mediaFiles: [],
           },
+          include: {
+            conversation: {
+              include: {
+                participantOne: {
+                  select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    avatarUrl: true,
+                  },
+                },
+                participantTwo: {
+                  select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    avatarUrl: true,
+                  },
+                },
+              },
+            },
+          },
         });
+
+        if (!messageUpdated) {
+          throw new Error('Failed to update message as deleted');
+        }
+        const participantOne =
+          messageUpdated.conversation.participantOne.id === profileId
+            ? messageUpdated.conversation.participantTwo
+            : messageUpdated.conversation.participantOne;
+
+        // participant 2 is the other participant
+        const participantTwo =
+          messageUpdated.conversation.participantTwo.id !== profileId
+            ? messageUpdated.conversation.participantOne
+            : messageUpdated.conversation.participantTwo;
+
+        if (participantOne.id !== profileId) {
+          this.chatNotificationGateway.emitNewMessage({
+            receiverId: participantOne.id,
+            conversationId: message.conversationId,
+            otherParticipant: {
+              id: participantTwo.id,
+              firstName: participantTwo.firstName,
+              lastName: participantTwo.lastName,
+              avatarUrl: participantTwo.avatarUrl || undefined,
+            },
+            message,
+          });
+        }
+
         return {
           success: true,
           message: 'Message content permanently deleted',
@@ -196,9 +144,69 @@ export class MessageService {
           deletedByReceiver: true,
         },
       });
+
       return { success: true, message: 'Message deleted for the user' };
     } catch (error) {
       return { success: false, message: 'Failed to delete message', error };
     }
+  }
+
+  async getMoreMessagesForConversation(
+    conversationId: number,
+    cursorTo?: string,
+  ) {
+    const pageSize = 20;
+
+    // Get messages backwards using the cursor faster way
+    const messages = await this.prisma.message.findMany({
+      where: { conversationId },
+      take: pageSize, // Still moving "down" the list
+      orderBy: [
+        { createdAt: 'desc' }, // Primary: Time-based
+        { id: 'desc' }, // Secondary: Lexicographical tie-breaker
+      ],
+      ...(cursorTo && {
+        cursor: { id: cursorTo }, // Prisma finds this exact string
+        skip: 1,
+      }),
+    });
+
+    return messages;
+  }
+
+  async getNewMessagesForConversation(
+    conversationId: number,
+    cursorTo?: string,
+  ) {
+    // Get messages forwards using the cursor faster way
+    const messages = await this.prisma.message.findMany({
+      where: { conversationId },
+      orderBy: [
+        { createdAt: 'asc' }, // Primary: Time-based
+        { id: 'asc' }, // Secondary: Lexicographical tie-breaker
+      ],
+      ...(cursorTo && {
+        cursor: { id: cursorTo }, // Prisma finds this exact string
+        skip: 1,
+      }),
+    });
+
+    return messages;
+  }
+
+  //helper function to send message
+
+  sendMessageToSocket(
+    receiverId: number,
+    conversationId: number,
+    otherParticipant: any,
+    message: any,
+  ) {
+    this.chatNotificationGateway.emitNewMessage({
+      receiverId,
+      conversationId,
+      otherParticipant,
+      message,
+    });
   }
 }

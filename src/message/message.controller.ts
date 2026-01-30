@@ -1,18 +1,9 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  Query,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Param } from '@nestjs/common';
 import { MessageService } from './message.service';
-import { CreateMessageDto } from './dto/create-message.dto';
-import { UpdateMessageDto } from './dto/update-message.dto';
 import { deleteMessageDto } from './dto/delete-message.dto';
 import { isPublicEndpoint } from 'src/Auth/decorator';
+import { CreateMessageDto } from './dto/create-message.dto';
+import { cursorTo } from 'readline';
 
 @Controller('message')
 export class MessageController {
@@ -24,49 +15,6 @@ export class MessageController {
     return this.messageService.createMessage(createMessageDto);
   }
 
-  @isPublicEndpoint()
-  @Get()
-  getMessages(
-    @Query('profileId') profileId: string,
-    @Query('page') page: string,
-  ) {
-    return this.messageService.getMessagesForUser(
-      Number(profileId),
-      Number(page),
-    );
-  }
-
-  @isPublicEndpoint()
-  @Get('unreadCount')
-  getUnreadMessagesCount(@Query('profileId') profileId: string) {
-    return this.messageService.getUnreadMessagesCount(Number(profileId));
-  }
-
-  @isPublicEndpoint()
-  @Post('unreadCount/:messageCounterId')
-  updateUnreadMessagesCount(
-    @Param('messageCounterId') messageCounterId: string,
-    @Body() body: { profileId: number; counters: { [key: number]: number } },
-  ) {
-    return this.messageService.updateUnreadMessagesCount(
-      Number(messageCounterId),
-      Number(body.profileId),
-      body.counters,
-    );
-  }
-
-  @isPublicEndpoint()
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.messageService.findOne(+id);
-  }
-
-  @isPublicEndpoint()
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateMessageDto: UpdateMessageDto) {
-    return this.messageService.update(+id, updateMessageDto);
-  }
-
   // delete message endpoint
   @isPublicEndpoint()
   @Post('delete')
@@ -75,6 +23,30 @@ export class MessageController {
       dto.message,
       Number(dto.profileId),
       Number(dto.userId),
+    );
+  }
+
+  @isPublicEndpoint()
+  @Post('more/:conversationId')
+  getMoreMessagesForConversation(
+    @Param('conversationId') conversationId: number,
+    @Body('cursorTo') cursorTo: string,
+  ) {
+    return this.messageService.getMoreMessagesForConversation(
+      conversationId,
+      cursorTo,
+    );
+  }
+
+  @isPublicEndpoint()
+  @Post('new/:conversationId')
+  getNewMessagesForConversation(
+    @Param('conversationId') conversationId: number,
+    @Body('cursorTo') cursorTo: string,
+  ) {
+    return this.messageService.getNewMessagesForConversation(
+      conversationId,
+      cursorTo,
     );
   }
 }

@@ -1,0 +1,43 @@
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Query,
+  Put,
+  Patch,
+} from '@nestjs/common';
+import { ConversationService } from './conversation.service';
+import { isPublicEndpoint } from 'src/Auth/decorator';
+
+@Controller('conversation')
+export class ConversationController {
+  constructor(private readonly conversationService: ConversationService) {}
+
+  @isPublicEndpoint()
+  @Get(':profileId')
+  getConversationsForUser(
+    @Param('profileId') profileId: string,
+    @Query('page') page?: string,
+  ) {
+    return this.conversationService.getConversationsForUser(
+      Number(profileId),
+      page ? Number(page) : 1,
+    );
+  }
+
+  @isPublicEndpoint()
+  @Patch('/:conversationId/unread-count')
+  updateUnreadCount(
+    @Param('conversationId') conversationId: string,
+    @Body('unreadCount') unreadCount: number,
+    @Body('profileId') profileId: number,
+  ) {
+    return this.conversationService.updateUnreadCount(
+      Number(conversationId),
+      unreadCount,
+      profileId,
+    );
+  }
+}

@@ -45,9 +45,11 @@ model Profile {
   user          User      @relation(fields: [userId], references: [id])
   myToolBox     Tool[]    @relation("OwnedTools")
   favoriteTools Tool[] @relation("FavoriteTools")
+  sentMessages Message[] @relation("sentMessages")
 
-  sentMessages  Message[] @relation("sentMessages")
-  receivedMessages Message[] @relation("receivedMessages")
+  conversationsAsParticipantOne Conversation[] @relation("ConversationParticipantOne")
+  conversationsAsParticipantTwo Conversation[] @relation("ConversationParticipantTwo")
+
   notifications Notification[] @relation("notifications")
   unreadMessagesCounter UnreadMessagesCounter?
   notificationsCounter  NotificationsCounter?
@@ -90,19 +92,45 @@ model Tool {
 
 }
 
-model Message {
-  id         String   @id @default(cuid())
-  senderId   Int
-  receiverId Int
-  content    String
-  deletedBySender   Boolean  @default(false)
-  deletedByReceiver Boolean  @default(false)
-  mediaFiles  Json?    @default("[]")
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  sender     Profile  @relation("sentMessages", fields: [senderId], references: [id])
-  receiver   Profile  @relation("receivedMessages", fields: [receiverId], references: [id])
+model Conversation {
+  id              Int      @id @default(autoincrement())
+  participantOneId Int
+  participantTwoId Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  unreadCountParticipantOne Int @default(0)
+  unreadCountParticipantTwo Int @default(0)
+
+  participantOne Profile @relation("ConversationParticipantOne", fields: [participantOneId], references: [id])
+
+  participantTwo Profile @relation("ConversationParticipantTwo", fields: [participantTwoId], references: [id])
+
+  messages Message[]
+
+  @@unique([participantOneId, participantTwoId])
 }
+
+
+
+model Message {
+  id             String   @id @default(cuid())
+  conversationId Int
+  senderId       Int
+  content        String
+
+  deletedBySender   Boolean @default(false)
+  deletedByReceiver Boolean @default(false)
+  mediaFiles        Json?   @default("[]")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  conversation Conversation @relation(fields: [conversationId], references: [id])
+
+  sender   Profile @relation("sentMessages", fields: [senderId], references: [id])
+}
+
 
 model Notification {
   id         Int      @id @default(autoincrement())
