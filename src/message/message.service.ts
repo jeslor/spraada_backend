@@ -35,15 +35,19 @@ export class MessageService {
           mediaFiles: mediaFiles ? mediaFiles.map((file) => ({ ...file })) : [],
         },
       });
-      const otherParticipant =
+      const sendingParticipant =
         conversation.participantOneId === senderId
           ? conversation.participantTwo
           : conversation.participantOne;
+      const receivingParticipant =
+        conversation.participantOneId !== senderId
+          ? conversation.participantOne
+          : conversation.participantTwo;
 
       this.sendMessageToSocket(
-        otherProfileId,
+        receivingParticipant.id,
         conversation.id,
-        otherParticipant,
+        sendingParticipant,
         savedMessage,
       );
 
