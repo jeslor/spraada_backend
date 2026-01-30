@@ -19,40 +19,51 @@ export class MessageService {
       const { message, otherProfileId } = createMessageDto;
       const { senderId, content, mediaFiles } = message;
 
-      // get or create conversation between sender and receiver
+      // 1. Get or create conversation
+      // Ensure this returns the participants' data (firstName, lastName, etc.)
       const conversation =
         await this.conversationService.getOrCreateConversation(
           senderId,
           otherProfileId,
         );
 
-      // create message in the conversation
+      // 2. Create message
       const savedMessage = await this.prisma.message.create({
         data: {
           senderId,
           conversationId: conversation.id,
           content,
+          // If mediaFiles is a JSON column, this is fine.
+          // If it's a relation, you'd use: mediaFiles: { create: mediaFiles }
           mediaFiles: mediaFiles ? mediaFiles.map((file) => ({ ...file })) : [],
         },
       });
-      const sendingParticipant =
+
+      // 3. Simplify Participant Logic
+      // We just need to know who the sender is to tell the socket "X sent a message"
+      const senderData =
         conversation.participantOneId === senderId
-          ? conversation.participantTwo
-          : conversation.participantOne;
-      const receivingParticipant =
-        conversation.participantOneId !== senderId
           ? conversation.participantOne
           : conversation.participantTwo;
 
+      // 4. Socket Emission
+      // We send to 'otherProfileId' because they are the recipient.
       this.sendMessageToSocket(
-        receivingParticipant.id,
+        otherProfileId,
         conversation.id,
-        sendingParticipant,
+        {
+          id: senderData.id,
+          firstName: senderData.firstName,
+          lastName: senderData.lastName,
+          avatarUrl: senderData.avatarUrl ?? undefined,
+        },
         savedMessage,
       );
 
       return savedMessage;
     } catch (error) {
+      // Log error details for debugging before re-throwing
+      console.error('Failed to create message:', error);
       throw error;
     }
   };
