@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Body, Param, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Query,
+  Put,
+  Patch,
+} from '@nestjs/common';
 import { ConversationService } from './conversation.service';
 import { isPublicEndpoint } from 'src/Auth/decorator';
 
@@ -15,6 +24,20 @@ export class ConversationController {
     return this.conversationService.getConversationsForUser(
       Number(profileId),
       page ? Number(page) : 1,
+    );
+  }
+
+  @isPublicEndpoint()
+  @Patch('/:conversationId/unread-count')
+  updateUnreadCount(
+    @Param('conversationId') conversationId: string,
+    @Body('unreadCount') unreadCount: number,
+    @Body('profileId') profileId: number,
+  ) {
+    return this.conversationService.updateUnreadCount(
+      Number(conversationId),
+      unreadCount,
+      profileId,
     );
   }
 }

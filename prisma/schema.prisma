@@ -99,6 +99,8 @@ model Conversation {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  unreadCountParticipantOne Int @default(0)
+  unreadCountParticipantTwo Int @default(0)
 
   participantOne Profile @relation("ConversationParticipantOne", fields: [participantOneId], references: [id])
 

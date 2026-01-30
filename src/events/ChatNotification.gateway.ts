@@ -54,9 +54,6 @@ export class ChatNotificationGateway
       client.emit('chatError', 'Unauthorized');
       return;
     }
-    console.log(client);
-
-    console.log(data);
 
     this.server.to(`user:${data.receiverId}`).emit('conversation', {
       conversationId: data.conversationId,

@@ -82,4 +82,39 @@ export class ConversationService {
       };
     });
   }
+
+  async updateUnreadCount(
+    conversationId: number,
+    unreadCount: number,
+    profileId: number,
+  ) {
+    const conversation = await this.prisma.conversation.findUnique({
+      where: { id: conversationId },
+    });
+
+    if (!conversation) {
+      throw new Error('Conversation not found');
+    }
+
+    if (
+      profileId !== conversation.participantOneId &&
+      profileId !== conversation.participantTwoId
+    ) {
+      throw new Error('Profile is not a participant of the conversation');
+    }
+
+    if (profileId === conversation.participantOneId) {
+      await this.prisma.conversation.update({
+        where: { id: conversationId },
+        data: { unreadCountParticipantOne: unreadCount },
+      });
+    } else {
+      await this.prisma.conversation.update({
+        where: { id: conversationId },
+        data: { unreadCountParticipantTwo: unreadCount },
+      });
+    }
+
+    return { conversationId, unreadCount };
+  }
 }
