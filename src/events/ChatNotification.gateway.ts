@@ -62,6 +62,20 @@ export class ChatNotificationGateway
     });
   }
 
+  /// backend emitter
+  emitNewMessage(data: {
+    receiverId: number;
+    conversationId: number;
+    otherParticipant: any;
+    message: any;
+  }) {
+    this.server.to(`user:${data.receiverId}`).emit('conversation', {
+      conversationId: data.conversationId,
+      otherParticipant: data.otherParticipant,
+      message: data.message,
+    });
+  }
+
   // notification event
   @SubscribeMessage('notifications')
   async handleNotification(

@@ -29,6 +29,24 @@ export class ConversationService {
         participantOneId: lowerId,
         participantTwoId: higherId,
       },
+      include: {
+        participantOne: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            avatarUrl: true,
+          },
+        },
+        participantTwo: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            avatarUrl: true,
+          },
+        },
+      },
     });
   }
 
@@ -75,10 +93,15 @@ export class ConversationService {
         conversation.participantOneId === profileAId
           ? conversation.participantTwo
           : conversation.participantOne;
+      const unreadCount =
+        conversation.participantOneId === profileAId
+          ? conversation.unreadCountParticipantOne
+          : conversation.unreadCountParticipantTwo;
       return {
         id: conversation.id,
         otherParticipant: otherParticipant,
         messages: conversation.messages.reverse(),
+        unreadCount: unreadCount,
       };
     });
   }

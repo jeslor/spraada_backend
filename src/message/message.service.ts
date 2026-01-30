@@ -3,6 +3,7 @@ import PrismaService from 'src/prisma/prisma.service';
 import { UploadService } from 'src/uploadResource/upload.service';
 import { ConversationService } from 'src/conversation/conversation.service';
 import { CreateMessageDto } from './dto/create-message.dto';
+import { ChatNotificationGateway } from 'src/events/ChatNotification.gateway';
 
 @Injectable()
 export class MessageService {
@@ -10,6 +11,7 @@ export class MessageService {
     private prisma: PrismaService,
     private uploadService: UploadService,
     private conversationService: ConversationService,
+    private chatNotificationGateway: ChatNotificationGateway,
   ) {}
 
   createMessage = async (createMessageDto: CreateMessageDto) => {
@@ -33,6 +35,18 @@ export class MessageService {
           mediaFiles: mediaFiles ? mediaFiles.map((file) => ({ ...file })) : [],
         },
       });
+      const otherParticipant =
+        conversation.participantOneId === senderId
+          ? conversation.participantTwo
+          : conversation.participantOne;
+
+      this.sendMessageToSocket(
+        otherProfileId,
+        conversation.id,
+        otherParticipant,
+        savedMessage,
+      );
+
       return savedMessage;
     } catch (error) {
       throw error;
@@ -55,7 +69,7 @@ export class MessageService {
             );
           }
         }
-        await this.prisma.message.update({
+        const messageUpdated = await this.prisma.message.update({
           where: {
             id: message.id,
           },
@@ -65,7 +79,58 @@ export class MessageService {
             content: '',
             mediaFiles: [],
           },
+          include: {
+            conversation: {
+              include: {
+                participantOne: {
+                  select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    avatarUrl: true,
+                  },
+                },
+                participantTwo: {
+                  select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    avatarUrl: true,
+                  },
+                },
+              },
+            },
+          },
         });
+
+        if (!messageUpdated) {
+          throw new Error('Failed to update message as deleted');
+        }
+        const participantOne =
+          messageUpdated.conversation.participantOne.id === profileId
+            ? messageUpdated.conversation.participantTwo
+            : messageUpdated.conversation.participantOne;
+
+        // participant 2 is the other participant
+        const participantTwo =
+          messageUpdated.conversation.participantTwo.id !== profileId
+            ? messageUpdated.conversation.participantOne
+            : messageUpdated.conversation.participantTwo;
+
+        if (participantOne.id !== profileId) {
+          this.chatNotificationGateway.emitNewMessage({
+            receiverId: participantOne.id,
+            conversationId: message.conversationId,
+            otherParticipant: {
+              id: participantTwo.id,
+              firstName: participantTwo.firstName,
+              lastName: participantTwo.lastName,
+              avatarUrl: participantTwo.avatarUrl || undefined,
+            },
+            message,
+          });
+        }
+
         return {
           success: true,
           message: 'Message content permanently deleted',
@@ -79,6 +144,7 @@ export class MessageService {
           deletedByReceiver: true,
         },
       });
+
       return { success: true, message: 'Message deleted for the user' };
     } catch (error) {
       return { success: false, message: 'Failed to delete message', error };
@@ -126,5 +192,21 @@ export class MessageService {
     });
 
     return messages;
+  }
+
+  //helper function to send message
+
+  sendMessageToSocket(
+    receiverId: number,
+    conversationId: number,
+    otherParticipant: any,
+    message: any,
+  ) {
+    this.chatNotificationGateway.emitNewMessage({
+      receiverId,
+      conversationId,
+      otherParticipant,
+      message,
+    });
   }
 }
