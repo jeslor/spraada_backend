@@ -74,8 +74,6 @@ export class MessageService {
 
       return savedMessage;
     } catch (error) {
-      // Log error details for debugging before re-throwing
-      console.error('Failed to create message:', error);
       throw error;
     }
   };
