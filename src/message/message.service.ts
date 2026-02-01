@@ -43,11 +43,6 @@ export class MessageService {
         conversation.participantOneId === otherProfileId
           ? conversation.unreadCountParticipantOne + 1
           : conversation.unreadCountParticipantTwo + 1;
-      console.log(
-        conversation.participantOneId === otherProfileId,
-        'PARTICIPANT ONE ID CHECK',
-        newCounter,
-      );
 
       //3 .update unread count for the other participant
       await this.conversationService.updateUnreadCount(
