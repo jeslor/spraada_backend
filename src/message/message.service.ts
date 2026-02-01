@@ -39,14 +39,23 @@ export class MessageService {
         },
       });
 
-      // 3. Simplify Participant Logic
+      //3 .update unread count for the other participant
+      await this.conversationService.updateUnreadCount(
+        conversation.id,
+        conversation.participantOneId === otherProfileId
+          ? conversation.unreadCountParticipantOne + 1
+          : conversation.unreadCountParticipantTwo + 1,
+        otherProfileId,
+      );
+
+      // 4. Simplify Participant Logic
       // We just need to know who the sender is to tell the socket "X sent a message"
       const senderData =
         conversation.participantOneId === senderId
           ? conversation.participantOne
           : conversation.participantTwo;
 
-      // 4. Socket Emission
+      // 5. Socket Emission
       // We send to 'otherProfileId' because they are the recipient.
       this.sendMessageToSocket(
         otherProfileId,
