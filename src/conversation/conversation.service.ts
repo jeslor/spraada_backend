@@ -50,6 +50,68 @@ export class ConversationService {
     });
   }
 
+  //get conversations with the unread first
+  async getConversationsWithUnreadFirst(profileAId: number) {
+    const results = await this.prisma.conversation.findMany({
+      where: {
+        AND: [
+          {
+            OR: [
+              { participantOneId: profileAId },
+              { participantTwoId: profileAId },
+            ],
+          },
+          {
+            OR: [
+              { unreadCountParticipantOne: { gt: 0 } },
+              { unreadCountParticipantTwo: { gt: 0 } },
+            ],
+          },
+        ],
+      },
+      include: {
+        participantOne: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            avatarUrl: true,
+          },
+        },
+        participantTwo: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            avatarUrl: true,
+          },
+        },
+        messages: {
+          orderBy: {
+            createdAt: 'desc',
+          },
+          take: 10, // Fetch latest 10 messages
+        },
+      },
+    });
+    return results.map((conversation) => {
+      const otherParticipant =
+        conversation.participantOneId === profileAId
+          ? conversation.participantTwo
+          : conversation.participantOne;
+      const unreadCount =
+        conversation.participantOneId === profileAId
+          ? conversation.unreadCountParticipantOne
+          : conversation.unreadCountParticipantTwo;
+      return {
+        id: conversation.id,
+        otherParticipant: otherParticipant,
+        messages: conversation.messages.reverse(),
+        unreadCount: unreadCount,
+      };
+    });
+  }
+
   async getConversationsForUser(profileAId: number, page: number = 1) {
     const pageSize = 20;
     const skip = (page - 1) * pageSize;
