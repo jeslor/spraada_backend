@@ -28,6 +28,14 @@ export class ConversationController {
   }
 
   @isPublicEndpoint()
+  @Get('/:profileId/unread-first')
+  getConversationsForUserUnreadFirst(@Param('profileId') profileId: string) {
+    return this.conversationService.getConversationsWithUnreadFirst(
+      Number(profileId),
+    );
+  }
+
+  @isPublicEndpoint()
   @Patch('/:conversationId/unread-count')
   updateUnreadCount(
     @Param('conversationId') conversationId: string,
