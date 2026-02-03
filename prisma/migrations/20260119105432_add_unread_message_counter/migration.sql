@@ -1,13 +1,13 @@
--- CreateTable
-CREATE TABLE "UnreadMessagesCounter" (
-    "id" SERIAL NOT NULL,
-    "profileId" INTEGER NOT NULL,
-    "counters" JSONB NOT NULL DEFAULT '{}',
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "UnreadMessagesCounter_pkey" PRIMARY KEY ("id")
-);
-
--- AddForeignKey
-ALTER TABLE "UnreadMessagesCounter" ADD CONSTRAINT "UnreadMessagesCounter_profileId_fkey" FOREIGN KEY ("profileId") REFERENCES "Profile"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+-- CreateTable (if not exists)
+-- Table already exists in database, this migration is a no-op
+-- CREATE TABLE "UnreadMessagesCounter" (
+--     "id" SERIAL NOT NULL,
+--     "profileId" INTEGER NOT NULL,
+--     "counters" JSONB NOT NULL DEFAULT '{}',
+--     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+--     "updatedAt" TIMESTAMP(3) NOT NULL,
+--     CONSTRAINT "UnreadMessagesCounter_pkey" PRIMARY KEY ("id")
+-- );
+--
+-- -- AddForeignKey
+-- ALTER TABLE "UnreadMessagesCounter" ADD CONSTRAINT "UnreadMessagesCounter_profileId_fkey" FOREIGN KEY ("profileId") REFERENCES "Profile"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

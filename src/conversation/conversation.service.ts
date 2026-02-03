@@ -52,6 +52,8 @@ export class ConversationService {
 
   //get conversations with the unread first
   async getConversationsWithUnreadFirst(profileAId: number) {
+    const profileKey = `profile_${profileAId}`;
+
     const results = await this.prisma.conversation.findMany({
       where: {
         AND: [
@@ -62,10 +64,10 @@ export class ConversationService {
             ],
           },
           {
-            OR: [
-              { unreadCountParticipantOne: { gt: 0 } },
-              { unreadCountParticipantTwo: { gt: 0 } },
-            ],
+            unReadMessagesCounters: {
+              path: [profileKey],
+              gt: 0,
+            },
           },
         ],
       },
@@ -90,24 +92,26 @@ export class ConversationService {
           orderBy: {
             createdAt: 'desc',
           },
-          take: 10, // Fetch latest 10 messages
+          take: 10,
         },
       },
+      orderBy: { updatedAt: 'desc' },
     });
+    console.log(results);
+
     return results.map((conversation) => {
       const otherParticipant =
         conversation.participantOneId === profileAId
           ? conversation.participantTwo
           : conversation.participantOne;
+
       const unreadCount =
-        conversation.participantOneId === profileAId
-          ? conversation.unreadCountParticipantOne
-          : conversation.unreadCountParticipantTwo;
+        conversation.unReadMessagesCounters?.[profileKey] || 0;
       return {
         id: conversation.id,
-        otherParticipant: otherParticipant,
+        otherParticipant,
         messages: conversation.messages.reverse(),
-        unreadCount: unreadCount,
+        unreadCount,
       };
     });
   }
@@ -115,7 +119,6 @@ export class ConversationService {
   async getConversationsForUser(profileAId: number, page: number = 1) {
     const pageSize = 20;
     const skip = (page - 1) * pageSize;
-    // Implementation for retrieving conversations for a user
     const conversations = await this.prisma.conversation.findMany({
       where: {
         OR: [
@@ -146,65 +149,66 @@ export class ConversationService {
           orderBy: {
             createdAt: 'desc',
           },
-          take: 10, // Fetch latest 10 messages
+          take: 10,
         },
       },
+      orderBy: { updatedAt: 'desc' },
     });
+
     return conversations.map((conversation) => {
       const otherParticipant =
         conversation.participantOneId === profileAId
           ? conversation.participantTwo
           : conversation.participantOne;
+
       const unreadCount =
-        conversation.participantOneId === profileAId
-          ? conversation.unreadCountParticipantOne
-          : conversation.unreadCountParticipantTwo;
+        conversation.unReadMessagesCounters?.[`profile_${profileAId}`] || 0;
       return {
         id: conversation.id,
-        otherParticipant: otherParticipant,
+        otherParticipant,
         messages: conversation.messages.reverse(),
-        unreadCount: unreadCount,
+        unreadCount,
       };
     });
   }
 
+  //update unread count for a profile in a conversation, used when receiving new messages
   async updateUnreadCount(
     conversationId: number,
     unreadCount: number,
     profileId: number,
   ) {
-    const conversation = await this.prisma.conversation.findUnique({
+    if (!conversationId || !profileId) {
+      throw new Error('conversationId and profileId are required');
+    }
+    const profileKey = `profile_${profileId}`;
+
+    const conversation = await this.prisma.conversation.update({
       where: { id: conversationId },
+      data: {
+        unReadMessagesCounters: {
+          ...(profileId && { [profileKey]: unreadCount }),
+        },
+      },
     });
+    return conversation;
+  }
 
-    if (!conversation) {
-      throw new Error('Conversation not found');
+  // Mark conversation as read
+  async markConversationAsRead(conversationId: number, profileId: number) {
+    if (!conversationId || !profileId) {
+      throw new Error('conversationId and profileId are required');
     }
+    const profileKey = `profile_${profileId}`;
 
-    if (
-      profileId !== conversation.participantOneId &&
-      profileId !== conversation.participantTwoId
-    ) {
-      throw new Error('Profile is not a participant of the conversation');
-    }
-    let updatedConversation;
-    console.log(profileId === conversation.participantOneId);
-    console.log(profileId === conversation.participantTwoId);
-
-    if (profileId !== conversation.participantOneId) {
-      updatedConversation = await this.prisma.conversation.update({
-        where: { id: conversationId },
-        data: { unreadCountParticipantOne: unreadCount },
-      });
-    } else {
-      updatedConversation = await this.prisma.conversation.update({
-        where: { id: conversationId },
-        data: { unreadCountParticipantTwo: unreadCount },
-      });
-    }
-
-    console.log(updatedConversation);
-
-    return { conversationId, unreadCount };
+    const conversation = await this.prisma.conversation.update({
+      where: { id: conversationId },
+      data: {
+        unReadMessagesCounters: {
+          ...(profileId && { [profileKey]: 0 }),
+        },
+      },
+    });
+    return conversation;
   }
 }

@@ -36,15 +36,13 @@ export class ConversationController {
   }
 
   @isPublicEndpoint()
-  @Patch('/:conversationId/unread-count')
-  updateUnreadCount(
+  @Patch('/:conversationId/mark-as-read')
+  markConversationAsRead(
     @Param('conversationId') conversationId: string,
-    @Body('unreadCount') unreadCount: number,
     @Body('profileId') profileId: number,
   ) {
-    return this.conversationService.updateUnreadCount(
+    return this.conversationService.markConversationAsRead(
       Number(conversationId),
-      unreadCount,
       profileId,
     );
   }

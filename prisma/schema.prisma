@@ -3,9 +3,9 @@ generator client {
 }
 
 datasource db {
-   provider  = "postgresql"
+  provider  = "postgresql"
   url       = env("DATABASE_URL")
-  // directUrl = env("DIRECT_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
@@ -24,36 +24,33 @@ model User {
 }
 
 model Profile {
-  id            Int       @id @default(autoincrement())
-  firstName     String
-  lastName      String
-  email         String    @unique
-  bio           String?
-  avatarUrl     String?
-  avatarUrlKey  String?
-  coverUrl      String?
-  coverUrlKey   String?
-  country       String?
-  address       String?
-  city          String?
-  phone         String?
-  userId        Int       @unique
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  borrowedTools Booking[] @relation("borrowerBooking")
-  rentedTools   Booking[] @relation("ownerBooking")
-  user          User      @relation(fields: [userId], references: [id])
-  myToolBox     Tool[]    @relation("OwnedTools")
-  favoriteTools Tool[] @relation("FavoriteTools")
-  sentMessages Message[] @relation("sentMessages")
-
-  conversationsAsParticipantOne Conversation[] @relation("ConversationParticipantOne")
-  conversationsAsParticipantTwo Conversation[] @relation("ConversationParticipantTwo")
-
-  notifications Notification[] @relation("notifications")
-  unreadMessagesCounter UnreadMessagesCounter?
-  conversationUnreadCounts ConversationParticipantUnreadCount[]
-  notificationsCounter  NotificationsCounter?
+  id                                 Int                                  @id @default(autoincrement())
+  firstName                          String
+  lastName                           String
+  email                              String                               @unique
+  bio                                String?
+  avatarUrl                          String?
+  avatarUrlKey                       String?
+  coverUrl                           String?
+  coverUrlKey                        String?
+  country                            String?
+  address                            String?
+  city                               String?
+  phone                              String?
+  userId                             Int                                  @unique
+  createdAt                          DateTime                             @default(now())
+  updatedAt                          DateTime                             @updatedAt
+  borrowedTools                      Booking[]                            @relation("borrowerBooking")
+  rentedTools                        Booking[]                            @relation("ownerBooking")
+  conversationsAsParticipantOne      Conversation[]                       @relation("ConversationParticipantOne")
+  conversationsAsParticipantTwo      Conversation[]                       @relation("ConversationParticipantTwo")
+  sentMessages                       Message[]                            @relation("sentMessages")
+  notifications                      Notification[]                       @relation("notifications")
+  notificationsCounter               NotificationsCounter?
+  user                               User                                 @relation(fields: [userId], references: [id])
+  myToolBox                          Tool[]                               @relation("OwnedTools")
+  unreadMessagesCounter              UnreadMessagesCounter?
+  favoriteTools                      Tool[]                               @relation("FavoriteTools")
 }
 
 model Booking {
@@ -89,86 +86,58 @@ model Tool {
   toolPhotos       Json      @default("[]")
   bookings         Booking[] @relation("toolBookings")
   profile          Profile   @relation("OwnedTools", fields: [profileId], references: [id])
-  favoritedBy Profile[] @relation("FavoriteTools")
-
+  favoritedBy      Profile[] @relation("FavoriteTools")
 }
 
 model Conversation {
-  id              Int      @id @default(autoincrement())
-  participantOneId Int
-  participantTwoId Int
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  unreadCountParticipantOne Int @default(0)
-  unreadCountParticipantTwo Int @default(0)
-
-  participantOne Profile @relation("ConversationParticipantOne", fields: [participantOneId], references: [id])
-
-  participantTwo Profile @relation("ConversationParticipantTwo", fields: [participantTwoId], references: [id])
-
-  messages Message[]
-  unreadCounters ConversationParticipantUnreadCount[]
+  id                                 Int                                  @id @default(autoincrement())
+  participantOneId                   Int
+  participantTwoId                   Int
+  createdAt                          DateTime                             @default(now())
+  updatedAt                          DateTime                             @updatedAt
+  participantOne                     Profile                              @relation("ConversationParticipantOne", fields: [participantOneId], references: [id])
+  participantTwo                     Profile                              @relation("ConversationParticipantTwo", fields: [participantTwoId], references: [id])
+  messages                           Message[]
+  unReadMessagesCounters Json      @default("{}")
 
   @@unique([participantOneId, participantTwoId])
 }
 
-model ConversationParticipantUnreadCount {
-  id                Int      @id @default(autoincrement())
-  conversationId   Int
-  profileId        Int
-  unreadCount      Int      @default(0)
-
-  conversation     Conversation @relation(fields: [conversationId], references: [id])
-  profile          Profile      @relation(fields: [profileId], references: [id])
-
-  @@unique([conversationId, profileId])
-}
-
-
-
 model Message {
-  id             String   @id @default(cuid())
-  conversationId Int
-  senderId       Int
-  content        String
-
-  deletedBySender   Boolean @default(false)
-  deletedByReceiver Boolean @default(false)
-  mediaFiles        Json?   @default("[]")
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  conversation Conversation @relation(fields: [conversationId], references: [id])
-
-  sender   Profile @relation("sentMessages", fields: [senderId], references: [id])
+  id                String       @id @default(cuid())
+  senderId          Int
+  content           String
+  deletedBySender   Boolean      @default(false)
+  deletedByReceiver Boolean      @default(false)
+  mediaFiles        Json?        @default("[]")
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  conversationId    Int
+  conversation      Conversation @relation(fields: [conversationId], references: [id])
+  sender            Profile      @relation("sentMessages", fields: [senderId], references: [id])
 }
-
 
 model Notification {
-  id         Int      @id @default(autoincrement())
-  profileId  Int
-  title      String
-  content    String
+  id                Int      @id @default(autoincrement())
+  profileId         Int
+  title             String
+  content           String
   profileMediaFiles Json?    @default("[]")
   contentMediaFiles Json?    @default("[]")
-  link       String?
-  isRead     Boolean  @default(false)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
-  profile    Profile @relation("notifications", fields: [profileId], references: [id])
+  link              String?
+  isRead            Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  profile           Profile  @relation("notifications", fields: [profileId], references: [id])
 }
 
-model UnreadMessagesCounter{
+model UnreadMessagesCounter {
   id        Int      @id @default(autoincrement())
   profileId Int      @unique
   counters  Json     @default("{}")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  profile   Profile @relation(fields: [profileId], references: [id])
+  profile   Profile  @relation(fields: [profileId], references: [id])
 }
 
 model NotificationsCounter {
@@ -177,8 +146,7 @@ model NotificationsCounter {
   count     Int      @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  profile   Profile @relation(fields: [profileId], references: [id])
+  profile   Profile  @relation(fields: [profileId], references: [id])
 }
 
 enum Role {

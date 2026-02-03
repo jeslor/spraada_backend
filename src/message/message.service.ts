@@ -20,7 +20,6 @@ export class MessageService {
       const { senderId, content, mediaFiles } = message;
 
       // 1. Get or create conversation
-      // Ensure this returns the participants' data (firstName, lastName, etc.)
       const conversation =
         await this.conversationService.getOrCreateConversation(
           senderId,
@@ -33,33 +32,29 @@ export class MessageService {
           senderId,
           conversationId: conversation.id,
           content,
-          // If mediaFiles is a JSON column, this is fine.
-          // If it's a relation, you'd use: mediaFiles: { create: mediaFiles }
           mediaFiles: mediaFiles ? mediaFiles.map((file) => ({ ...file })) : [],
         },
       });
 
-      const newCounter =
-        conversation.participantOneId === otherProfileId
-          ? conversation.unreadCountParticipantOne + 1
-          : conversation.unreadCountParticipantTwo + 1;
+      // 3. Update unread count in conversation
+      const currentUnreadCount = conversation['unReadMessagesCounters']
+        ? conversation['unReadMessagesCounters'][`profile_${otherProfileId}`] ||
+          0
+        : 0;
 
-      //3 .update unread count for the other participant
       await this.conversationService.updateUnreadCount(
         conversation.id,
-        newCounter,
+        currentUnreadCount + 1,
         otherProfileId,
       );
 
-      // 4. Simplify Participant Logic
-      // We just need to know who the sender is to tell the socket "X sent a message"
+      // 4. Get sender data for socket emission
       const senderData =
         conversation.participantOneId === senderId
           ? conversation.participantOne
           : conversation.participantTwo;
 
-      // 5. Socket Emission
-      // We send to 'otherProfileId' because they are the recipient.
+      // 6. Emit socket notification to recipient
       this.sendMessageToSocket(
         otherProfileId,
         conversation.id,
