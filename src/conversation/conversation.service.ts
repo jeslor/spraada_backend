@@ -97,7 +97,6 @@ export class ConversationService {
       },
       orderBy: { updatedAt: 'desc' },
     });
-    console.log(results);
 
     return results.map((conversation) => {
       const otherParticipant =
