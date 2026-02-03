@@ -1,3 +1,4 @@
 -- AlterTable
-ALTER TABLE "Message" ADD COLUMN     "deletedByReceiver" BOOLEAN NOT NULL DEFAULT false,
-ADD COLUMN     "deletedBySender" BOOLEAN NOT NULL DEFAULT false;
+-- Columns already exist in database, this migration is a no-op
+-- ALTER TABLE "Message" ADD COLUMN     "deletedByReceiver" BOOLEAN NOT NULL DEFAULT false,
+-- ADD COLUMN     "deletedBySender" BOOLEAN NOT NULL DEFAULT false;

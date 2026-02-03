@@ -5,4 +5,5 @@
 
 */
 -- CreateIndex
-CREATE UNIQUE INDEX "UnreadMessagesCounter_profileId_key" ON "UnreadMessagesCounter"("profileId");
+-- Index already exists in database, this migration is a no-op
+-- CREATE UNIQUE INDEX "UnreadMessagesCounter_profileId_key" ON "UnreadMessagesCounter"("profileId");

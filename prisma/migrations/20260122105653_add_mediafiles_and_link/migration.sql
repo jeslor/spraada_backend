@@ -1,4 +1,1 @@
--- AlterTable
-ALTER TABLE "Notification" ADD COLUMN     "contentMediaFiles" JSONB DEFAULT '[]',
-ADD COLUMN     "link" TEXT,
-ADD COLUMN     "profileMediaFiles" JSONB DEFAULT '[]';
+-- Migration is a no-op, table/columns already exist

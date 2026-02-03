@@ -5,5 +5,5 @@
 
 */
 -- AlterTable
-ALTER TABLE "Message" DROP COLUMN "mediaUrls",
-ADD COLUMN     "mediaFiles" JSONB DEFAULT '[]';
+-- Column mediaFiles already exists, so this is a no-op
+-- The migration serves as a record that mediaUrls was intended to be dropped and mediaFiles added
