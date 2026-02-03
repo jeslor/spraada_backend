@@ -187,18 +187,23 @@ export class ConversationService {
     ) {
       throw new Error('Profile is not a participant of the conversation');
     }
+    let updatedConversation;
+    console.log(profileId === conversation.participantOneId);
+    console.log(profileId === conversation.participantTwoId);
 
-    if (profileId === conversation.participantOneId) {
-      await this.prisma.conversation.update({
+    if (profileId !== conversation.participantOneId) {
+      updatedConversation = await this.prisma.conversation.update({
         where: { id: conversationId },
         data: { unreadCountParticipantOne: unreadCount },
       });
     } else {
-      await this.prisma.conversation.update({
+      updatedConversation = await this.prisma.conversation.update({
         where: { id: conversationId },
         data: { unreadCountParticipantTwo: unreadCount },
       });
     }
+
+    console.log(updatedConversation);
 
     return { conversationId, unreadCount };
   }
