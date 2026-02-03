@@ -52,6 +52,7 @@ model Profile {
 
   notifications Notification[] @relation("notifications")
   unreadMessagesCounter UnreadMessagesCounter?
+  conversationUnreadCounts ConversationParticipantUnreadCount[]
   notificationsCounter  NotificationsCounter?
 }
 
@@ -107,8 +108,21 @@ model Conversation {
   participantTwo Profile @relation("ConversationParticipantTwo", fields: [participantTwoId], references: [id])
 
   messages Message[]
+  unreadCounters ConversationParticipantUnreadCount[]
 
   @@unique([participantOneId, participantTwoId])
+}
+
+model ConversationParticipantUnreadCount {
+  id                Int      @id @default(autoincrement())
+  conversationId   Int
+  profileId        Int
+  unreadCount      Int      @default(0)
+
+  conversation     Conversation @relation(fields: [conversationId], references: [id])
+  profile          Profile      @relation(fields: [profileId], references: [id])
+
+  @@unique([conversationId, profileId])
 }
 
 
