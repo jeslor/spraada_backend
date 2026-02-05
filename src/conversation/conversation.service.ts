@@ -54,7 +54,8 @@ export class ConversationService {
   async getConversationsWithUnreadFirst(profileAId: number) {
     const profileKey = `profile_${profileAId}`;
 
-    const results = await this.prisma.conversation.findMany({
+    //find all with unread messages for profileAId and turn the array into
+    const ureadConversations = await this.prisma.conversation.findMany({
       where: {
         AND: [
           {
@@ -71,48 +72,108 @@ export class ConversationService {
           },
         ],
       },
-      include: {
-        participantOne: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            avatarUrl: true,
-          },
-        },
-        participantTwo: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            avatarUrl: true,
-          },
-        },
-        messages: {
-          orderBy: {
-            createdAt: 'desc',
-          },
-          take: 10,
-        },
-      },
       orderBy: { updatedAt: 'desc' },
     });
+    //generate map of conversationId to unread count
+    const unreadCountMap = new Map<number, number>();
+    for (const conversation of ureadConversations) {
+      unreadCountMap.set(
+        conversation.id,
+        conversation.unReadMessagesCounters?.[profileKey] || 0,
+      );
+    }
+    //loop through the map and make requests to get full conversation details
+    const fullResults: any[] = [];
+    for (const [conversationId, unreadCount] of unreadCountMap) {
+      const conversation = await this.prisma.conversation.findUnique({
+        where: { id: conversationId },
+        include: {
+          participantOne: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              avatarUrl: true,
+            },
+          },
+          participantTwo: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              avatarUrl: true,
+            },
+          },
+          messages: {
+            orderBy: {
+              createdAt: 'desc',
+            },
+            take: unreadCount + 5,
+          },
+        },
+      });
+      if (conversation) {
+        const otherParticipant =
+          conversation.participantOneId === profileAId
+            ? conversation.participantTwo
+            : conversation.participantOne;
 
-    return results.map((conversation) => {
-      const otherParticipant =
-        conversation.participantOneId === profileAId
-          ? conversation.participantTwo
-          : conversation.participantOne;
+        const unreadCount =
+          conversation.unReadMessagesCounters?.[profileKey] || 0;
 
-      const unreadCount =
-        conversation.unReadMessagesCounters?.[profileKey] || 0;
-      return {
-        id: conversation.id,
-        otherParticipant,
-        messages: conversation.messages.reverse(),
-        unreadCount,
-      };
-    });
+        fullResults.push({
+          id: conversation.id,
+          otherParticipant,
+          messages: conversation.messages.reverse(),
+          unreadCount,
+        });
+      }
+    }
+
+    // const results = await this.prisma.conversation.findMany({
+    //   where: {
+    //     AND: [
+    //       {
+    //         OR: [
+    //           { participantOneId: profileAId },
+    //           { participantTwoId: profileAId },
+    //         ],
+    //       },
+    //       {
+    //         unReadMessagesCounters: {
+    //           path: [profileKey],
+    //           gt: 0,
+    //         },
+    //       },
+    //     ],
+    //   },
+    //   include: {
+    //     participantOne: {
+    //       select: {
+    //         id: true,
+    //         firstName: true,
+    //         lastName: true,
+    //         avatarUrl: true,
+    //       },
+    //     },
+    //     participantTwo: {
+    //       select: {
+    //         id: true,
+    //         firstName: true,
+    //         lastName: true,
+    //         avatarUrl: true,
+    //       },
+    //     },
+    //     messages: {
+    //       orderBy: {
+    //         createdAt: 'desc',
+    //       },
+    //     },
+    //   },
+    //   orderBy: { updatedAt: 'desc' },
+    // });
+
+    return fullResults;
   }
 
   async getConversationsForUser(profileAId: number, page: number = 1) {
