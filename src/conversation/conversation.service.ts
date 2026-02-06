@@ -54,65 +54,52 @@ export class ConversationService {
   async getConversationsWithUnreadFirst(profileAId: number) {
     const profileKey = `profile_${profileAId}`;
 
-    //find all with unread messages for profileAId and turn the array into
-    const ureadConversations = await this.prisma.conversation.findMany({
+    // Get all conversations for this user with unread count info, sorted by unread first then by update time
+    const conversations = await this.prisma.conversation.findMany({
       where: {
-        AND: [
-          {
-            OR: [
-              { participantOneId: profileAId },
-              { participantTwoId: profileAId },
-            ],
-          },
-          {
-            unReadMessagesCounters: {
-              path: [profileKey],
-              gt: 0,
-            },
-          },
+        OR: [
+          { participantOneId: profileAId },
+          { participantTwoId: profileAId },
         ],
       },
-      orderBy: { updatedAt: 'desc' },
-    });
-    //generate map of conversationId to unread count
-    const unreadCountMap = new Map<number, number>();
-    for (const conversation of ureadConversations) {
-      unreadCountMap.set(
-        conversation.id,
-        conversation.unReadMessagesCounters?.[profileKey] || 0,
-      );
-    }
-    //loop through the map and make requests to get full conversation details
-    const fullResults: any[] = [];
-    for (const [conversationId, unreadCount] of unreadCountMap) {
-      const conversation = await this.prisma.conversation.findUnique({
-        where: { id: conversationId },
-        include: {
-          participantOne: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-              avatarUrl: true,
-            },
-          },
-          participantTwo: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-              avatarUrl: true,
-            },
-          },
-          messages: {
-            orderBy: {
-              createdAt: 'desc',
-            },
-            take: unreadCount + 5,
+      select: {
+        id: true,
+        participantOneId: true,
+        participantTwoId: true,
+        participantOne: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            avatarUrl: true,
           },
         },
-      });
-      if (conversation) {
+        participantTwo: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            avatarUrl: true,
+          },
+        },
+        unReadMessagesCounters: true,
+        messages: {
+          orderBy: {
+            createdAt: 'desc',
+          },
+          // Load unread messages + 15 messages for context to show the unread notification properly
+          // Rest will be loaded via pagination "load more"
+          take: 50, // Reasonable default that covers most unread scenarios
+        },
+      },
+      orderBy: [
+        { updatedAt: 'desc' }, // Most recent conversations first
+      ],
+    });
+
+    // Process results and sort by unread count
+    const results = conversations
+      .map((conversation) => {
         const otherParticipant =
           conversation.participantOneId === profileAId
             ? conversation.participantTwo
@@ -121,59 +108,25 @@ export class ConversationService {
         const unreadCount =
           conversation.unReadMessagesCounters?.[profileKey] || 0;
 
-        fullResults.push({
+        // Reverse to get chronological order
+        const messages = conversation.messages.reverse();
+
+        return {
           id: conversation.id,
           otherParticipant,
-          messages: conversation.messages.reverse(),
+          messages,
           unreadCount,
-        });
-      }
-    }
+        };
+      })
+      .sort((a, b) => {
+        // Sort by unread count first (descending), then by update time
+        if (a.unreadCount !== b.unreadCount) {
+          return b.unreadCount - a.unreadCount;
+        }
+        return 0;
+      });
 
-    // const results = await this.prisma.conversation.findMany({
-    //   where: {
-    //     AND: [
-    //       {
-    //         OR: [
-    //           { participantOneId: profileAId },
-    //           { participantTwoId: profileAId },
-    //         ],
-    //       },
-    //       {
-    //         unReadMessagesCounters: {
-    //           path: [profileKey],
-    //           gt: 0,
-    //         },
-    //       },
-    //     ],
-    //   },
-    //   include: {
-    //     participantOne: {
-    //       select: {
-    //         id: true,
-    //         firstName: true,
-    //         lastName: true,
-    //         avatarUrl: true,
-    //       },
-    //     },
-    //     participantTwo: {
-    //       select: {
-    //         id: true,
-    //         firstName: true,
-    //         lastName: true,
-    //         avatarUrl: true,
-    //       },
-    //     },
-    //     messages: {
-    //       orderBy: {
-    //         createdAt: 'desc',
-    //       },
-    //     },
-    //   },
-    //   orderBy: { updatedAt: 'desc' },
-    // });
-
-    return fullResults;
+    return results;
   }
 
   async getConversationsForUser(profileAId: number, page: number = 1) {
