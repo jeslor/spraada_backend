@@ -13,3 +13,5 @@
 //   .finally(async () => {
 //     await prisma.$disconnect();
 //   });
+
+///just a test file to delete all messages in the database, not used in production
