@@ -69,6 +69,12 @@ model Booking {
   toolBorrower      Profile       @relation("borrowerBooking", fields: [borrowedById], references: [id], map: "Booking_borrowerId_fkey")
   toolOwner         Profile       @relation("ownerBooking", fields: [rentedById], references: [id], map: "Booking_renterId_fkey")
   tool              Tool          @relation("toolBookings", fields: [toolId], references: [id])
+
+  @@index([toolId])
+  @@index([borrowedById])
+  @@index([rentedById])
+  @@index([status])
+  @@index([pickUpDate, returnDate])
 }
 
 model Tool {
@@ -87,6 +93,11 @@ model Tool {
   bookings         Booking[] @relation("toolBookings")
   profile          Profile   @relation("OwnedTools", fields: [profileId], references: [id])
   favoritedBy      Profile[] @relation("FavoriteTools")
+
+  @@index([profileId])
+  @@index([category])
+  @@index([available])
+  @@index([createdAt])
 }
 
 model Conversation {
@@ -115,6 +126,10 @@ model Message {
   conversationId    Int
   conversation      Conversation @relation(fields: [conversationId], references: [id])
   sender            Profile      @relation("sentMessages", fields: [senderId], references: [id])
+
+  @@index([conversationId])
+  @@index([senderId])
+  @@index([conversationId, createdAt])
 }
 
 model Notification {
@@ -129,6 +144,10 @@ model Notification {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
   profile           Profile  @relation("notifications", fields: [profileId], references: [id])
+
+  @@index([profileId])
+  @@index([profileId, isRead])
+  @@index([createdAt])
 }
 
 model UnreadMessagesCounter {

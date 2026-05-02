@@ -12,11 +12,23 @@ import { ChatNotificationModule } from './events/ChatNotification.module';
 import { NotificationModule } from './notification/notification.module';
 import { HomeModule } from './home/home.module';
 import { ConversationModule } from './conversation/conversation.module';
+import { CacheModule } from '@nestjs/cache-manager';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+    }),
+    CacheModule.registerAsync({
+      isGlobal: true,
+      useFactory: async () => {
+        if (process.env.REDIS_URL) {
+          const { redisStore } = await import('cache-manager-redis-yet');
+          const store = await redisStore({ url: process.env.REDIS_URL });
+          return { store };
+        }
+        return {};
+      },
     }),
     HomeModule,
     AuthModule,

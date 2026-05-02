@@ -87,9 +87,9 @@ export class ConversationService {
           orderBy: {
             createdAt: 'desc',
           },
-          // Load unread messages + 15 messages for context to show the unread notification properly
-          // Rest will be loaded via pagination "load more"
-          take: 50, // Reasonable default that covers most unread scenarios
+          // Load only the latest message for the conversation preview in the sidebar.
+          // Full message history is loaded on demand when the user opens a conversation.
+          take: 1,
         },
       },
       orderBy: [
@@ -162,7 +162,8 @@ export class ConversationService {
           orderBy: {
             createdAt: 'desc',
           },
-          take: 10,
+          // Load only the latest message for the conversation preview in the sidebar.
+          take: 1,
         },
       },
       orderBy: { updatedAt: 'desc' },
