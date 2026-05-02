@@ -1,4 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import type { Cache } from 'cache-manager';
 import { CreateToolDto } from './dto/create-tool.dto';
 import { UpdateToolDto } from './dto/update-tool.dto';
 import PrismaService from 'src/prisma/prisma.service';
@@ -18,6 +20,7 @@ export class ToolsService {
   constructor(
     private prisma: PrismaService,
     private uploadService: UploadService,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
   async create(createToolDto: CreateToolDto) {
@@ -64,6 +67,9 @@ export class ToolsService {
     limit?: number;
   }) {
     try {
+      const cacheKey = `search_tools:${JSON.stringify({ searchTerm, category, sortBy, availability, page, limit })}`;
+      const cached = await this.cacheManager.get(cacheKey);
+      if (cached) return cached;
       const skip = (page - 1) * limit;
 
       const where: whereType = {};
@@ -129,7 +135,7 @@ export class ToolsService {
         },
       });
 
-      return {
+      const result = {
         data: tools,
         pagination: {
           page,
@@ -139,6 +145,9 @@ export class ToolsService {
           hasMore: page * limit < totalCount,
         },
       };
+
+      await this.cacheManager.set(cacheKey, result, 10_000);
+      return result;
     } catch (error) {
       throw error;
     }
@@ -244,6 +253,9 @@ export class ToolsService {
   async getRandomTools({ count }: { count: number }) {
     try {
       const TAKE = 12;
+      const cacheKey = 'random_tools';
+      const cached = await this.cacheManager.get(cacheKey);
+      if (cached) return cached;
 
       const totalCount = await this.prisma.tool.count();
 
@@ -256,6 +268,7 @@ export class ToolsService {
         take: TAKE,
       });
 
+      await this.cacheManager.set(cacheKey, foundTools, 30_000);
       return foundTools;
     } catch (error) {
       return {
