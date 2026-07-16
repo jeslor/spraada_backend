@@ -1,0 +1,97 @@
+name: Deploy Backend to EC2
+
+on:
+  push:
+    branches:
+      - main # Triggers when you merge/push to main
+  pull_request:
+    branches:
+      - main # Triggers when a PR is opened against main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout repository code
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # 2. Configure AWS Credentials
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-central-1 # Your AWS Region
+
+      # 3. Log in to Amazon ECR
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      # 4. Build, tag, and push backend image to Amazon ECR
+      - name: Build and Push Docker Image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: spraada/backend # Match your ECR backend repo name
+          IMAGE_TAG: latest
+        run: |
+          # Create the repository if it doesn't exist
+          aws ecr describe-repositories --repository-names $ECR_REPOSITORY || \
+            aws ecr create-repository --repository-name $ECR_REPOSITORY
+
+          # Build backend container (No Next.js build-args needed here)
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+      # 5. Dynamically grab the temporary ECR login password on the GitHub Runner
+      - name: Get ECR Login Password
+        id: get-token
+        run: |
+          echo "password=$(aws ecr get-login-password --region eu-central-1)" >> $GITHUB_OUTPUT
+
+      # 6. SSH into EC2, write env variables securely, and deploy backend container
+      - name: Deploy Backend to EC2 via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          # Pass both the temporary ECR password and your multi-line backend secrets
+          ECR_PASSWORD: ${{ steps.get-token.outputs.password }}
+          BACKEND_ENV: ${{ secrets.BACKEND_ENV }}
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          # Expose both variables to the remote EC2 terminal
+          envs: ECR_PASSWORD, BACKEND_ENV
+          script: |
+            # 1. Verify ECR_PASSWORD reached the server
+            if [ -z "$ECR_PASSWORD" ]; then
+              echo "Error: ECR_PASSWORD is empty!"
+              exit 1
+            fi
+
+            # 2. Securely write the environment variables to a local .env file
+            mkdir -p ~/spraada-backend
+            echo "$BACKEND_ENV" > ~/spraada-backend/.env
+            chmod 600 ~/spraada-backend/.env
+
+            # 3. Log into ECR on the EC2
+            echo "$ECR_PASSWORD" | docker login --username AWS --password-stdin 777327796579.dkr.ecr.eu-central-1.amazonaws.com
+
+            # 4. Pull the latest backend image
+            docker pull 777327796579.dkr.ecr.eu-central-1.amazonaws.com/spraada/backend:latest
+
+            # 5. Stop and remove the old container if it exists
+            docker stop spraada-backend || true
+            docker rm spraada-backend || true
+
+            # 6. Run the container using the secure local .env file (mapping port 5000 to 5000)
+            docker run -d \
+              --name spraada-backend \
+              --env-file ~/spraada-backend/.env \
+              -p 5000:5000 \
+              777327796579.dkr.ecr.eu-central-1.amazonaws.com/spraada/backend:latest
+
+            # 7. Clean up old dangling images to save space
+            docker image prune -f
