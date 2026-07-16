@@ -87,11 +87,11 @@ jobs:
             docker stop spraada-backend || true
             docker rm spraada-backend || true
 
-            # 6. Run the container using the secure local .env file (mapping port 5000 to 5000)
+            # 6. Run the container using the secure local .env file (mapping port 5000 to 4444)
             docker run -d \
               --name spraada-backend \
               --env-file ~/spraada-backend/.env \
-              -p 5000:5000 \
+              -p 5000:4444 \
               777327796579.dkr.ecr.eu-central-1.amazonaws.com/spraada/backend:latest
 
             # 7. Clean up old dangling images to save space
