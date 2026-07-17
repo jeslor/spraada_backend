@@ -46,13 +46,29 @@ jobs:
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
-      # 5. Dynamically grab the temporary ECR login password on the GitHub Runner
+      # 5. NEW: Clean up old untagged images in ECR to save storage costs
+      - name: Clean Up Old ECR Images
+        env:
+          ECR_REPOSITORY: spraada/backend
+        run: |
+          echo "Finding old untagged images in backend ECR repository..."
+          IMAGES_TO_DELETE=$(aws ecr list-images --repository-name $ECR_REPOSITORY --filter "tagStatus=UNTAGGED" --query 'imageIds[*]' --output json)
+
+          if [ "$IMAGES_TO_DELETE" != "[]" ] && [ ! -z "$IMAGES_TO_DELETE" ]; then
+            echo "Deleting old untagged backend images..."
+            aws ecr batch-delete-image --repository-name $ECR_REPOSITORY --image-ids "$IMAGES_TO_DELETE"
+            echo "Backend ECR cleanup complete."
+          else
+            echo "No untagged images found in backend ECR. Skipping cleanup."
+          fi
+
+      # 6. Dynamically grab the temporary ECR login password on the GitHub Runner
       - name: Get ECR Login Password
         id: get-token
         run: |
           echo "password=$(aws ecr get-login-password --region eu-central-1)" >> $GITHUB_OUTPUT
 
-      # 6. SSH into EC2, write env variables securely, and deploy backend container
+      # 7. SSH into EC2, write env variables securely, and deploy backend container
       - name: Deploy Backend to EC2 via SSH
         uses: appleboy/ssh-action@v1.0.3
         env:
