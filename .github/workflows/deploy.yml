@@ -95,4 +95,4 @@ jobs:
               777327796579.dkr.ecr.eu-central-1.amazonaws.com/spraada/backend:latest
 
             # 7. Clean up old dangling images to save space
-            docker image prune -f
+            docker image prune -a -f
